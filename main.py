@@ -7,7 +7,6 @@ import secrets
 from datetime import datetime
 from encryption import encrypt, decrypt
 
-#testing 1 2 am i right
 app = Flask(__name__)
 app.secret_key='Z1Uay8j78XHKaltcT0cQFQ'
 socketio = SocketIO(app)
