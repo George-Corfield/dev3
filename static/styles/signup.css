@@ -1,0 +1,109 @@
+body{
+    background-image: url('../geometric background.jpg');
+    margin: 15px;
+    margin-top: 100px;
+    font-size: 0.5cm;
+}
+
+.signup-form,
+.signup-form * {
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+
+
+
+.signup-form{
+    max-width: 560px;
+    margin:0 auto;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.signup-form__logo-container {
+    padding: 42px;
+    background: rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+
+.signup-form__logo {
+    display: block;
+    max-width: 175px;
+    margin: 0 auto;
+}
+
+
+.signup-form__content{
+    padding: 42px;
+    background: #eeeeee;
+}
+
+.signup-form__header{
+    margin-bottom: 21px;
+    text-align: center;
+    color: #333333;
+}
+
+.signup-form__message{
+    margin-bottom: 15px;
+    text-align: center;
+    color: red;
+}
+
+.signup-form__input{
+    width: 100%;
+    margin-bottom: 14px;
+    padding: 14px;
+    border-radius: 10px;
+    border: 2px solid #dddddd;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.5s;
+}
+
+
+.signup-form__input:focus{
+    border-color: #0042b5;
+
+}
+
+
+.signup-form__input::placeholder{
+    color: #aaaaaa;
+}
+
+.signup-form__button{
+    padding: 14px;
+    color: #ffffff;
+    font-weight: bold;
+    background: #0042b5;
+    margin-top: 21px;
+    width: 100%;
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+
+.signup-form__button:hover{
+    opacity: 0.8;
+}
+
+.signup-form__links{
+    margin-top: 21px;
+    text-align: center;
+    
+}
+
+.signup-form__link{
+    font-size: 0.4cm;
+    font-weight: bold;
+    color: #0042b5;
+    text-decoration: none;
+
+}
+
+.signup-form__link:hover{
+    opacity: 0.8;
+}

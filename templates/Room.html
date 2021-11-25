@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='UTF-8'>
+    </head>
+    <body>
+        <div class='room_container'>
+        {% for i in room_data %}
+            <a href='{{ url_for("chat",room_id=i.room_id) }}'>
+                <div class='room' id='{{ i.room_id }}'>
+                    <h4>{{ i['room'] }}</h4>
+                </div>
+            </a>
+        {% endfor %}
+        </div>
+    </body>
+</html>

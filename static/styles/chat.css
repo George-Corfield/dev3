@@ -1,0 +1,255 @@
+body{
+    font-family: sans-serif;
+    margin: 0
+}
+
+.container{
+    box-sizing: border-box;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    font-size: 17px;
+    font-weight: 400;
+    display: grid;
+    grid-template-rows: 50px auto min-content;
+    grid-template-columns: auto;
+    grid-template-areas: 
+        "header_container"
+        "message_space";
+}
+
+.header_container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #113974;
+    min-width: none;
+    color: white ;
+    font-size: large;
+    font-weight: bold;
+}
+
+.header_container_back{
+    display: flex;
+    flex: 1;
+    justify-content: center;
+}
+
+.header_container_name{
+    display: flex;
+    flex:2;
+    justify-content: center;
+}
+
+.header_container_hidden{
+    display: flex;
+    flex:1;
+}
+
+.header_container_back a{
+    text-decoration: none;
+    color: white;
+
+}
+
+.header_container_back i{
+    padding-right:5px;
+
+}
+
+.message_space{
+    display: grid;
+    grid-template-columns: 25% 75%;
+    grid-template-rows: auto;
+    overflow: hidden;
+    position: relative;
+    grid-template-areas: 
+        "sidebar_container messages_container";
+}
+
+.sidebar_container{
+    display: flex;
+    flex-direction: column;
+    grid-area: sidebar_container;
+}
+
+.sidebar_container_channel_name{
+    display: flex;
+    align-items: center;
+    height: 50px;
+    position: relative;
+    color: white;
+    font-weight: bold;
+    font-size: 17px;
+    background: #2969b0;
+    border-bottom: 1px solid #b5e2f5;
+}
+
+.sidebar_name{
+    flex:1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar_container_user_list{
+    flex: 1;
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    background: #2969b0;
+    color: white;
+    padding: 0 40
+}
+
+.messages_container{
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    position: relative;
+    min-height: 0;
+}
+
+.messages{
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 80%;
+    width: 100%;
+}
+
+.outgoing_message,
+.incoming_message {
+    display: flex;
+    padding:8px 40px;
+    box-sizing: border-box;
+
+}
+
+.outgoing_message{
+    justify-content: right;
+}
+
+
+.hidden{
+    display: flex;
+    flex: 2
+}
+
+.sent_message{
+    flex: 3 3 0;
+}
+
+
+.incoming_message{
+    justify-content: left;
+}
+
+.recv_message{
+    flex: 3 3 0
+}
+
+.you_username,
+.recv_username{
+    font-weight: 900;
+    display: inline-block;
+}
+
+.date_heading{
+    font-size: 12px;
+}
+
+.message{
+    display: inline;
+    margin: 0;
+    text-align: left;
+    width: 100%;
+}
+
+.footer_container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 20%;
+    box-shadow: 0px -10px 30px grey;
+    z-index: 100;
+}
+
+.input_container{
+    display: flex;
+    margin: 0 auto;
+    justify-content: center;
+    flex: 1;
+    align-items: center;
+    height: 100%;
+    width:90%;   
+}
+
+.input_container form{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    border: 1px solid #dddddd;
+    border-radius: 5px;
+    height: 40%;
+    font-size: 18px;
+}
+
+.inner_form{
+    flex:9;
+
+}
+
+.hidden_line{
+    height:1px;
+    color: #dddddd;
+    width: 80%;
+}
+
+
+
+.inner_form input{
+    font-size: large;
+    width: 100%;
+    padding: 0 20px;
+    height: 100%;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    resize: none;
+    
+}
+
+.inner_form input :focus{
+    border: none;
+    outline: none;
+    background-color: transparent;
+    resize: none;
+}
+
+.inner_btn{
+    flex:1;
+}
+
+.btn{
+    display: flex;
+    flex:1;
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.inner_btn button{
+    height: 100%;
+    width: 100%;
+    font-weight: bold;
+    font-size: larger;
+    color: grey;
+    background-color: white;
+    border: none;
+}
+
+.inner_btn button:hover{
+    color: #2969b0;
+    transition: 0.5s;
+}

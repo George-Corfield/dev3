@@ -1,0 +1,26 @@
+<html>
+    <head>
+        <title>Login page for chat</title>
+        <meta name='viewport' content="width=device-width, initial-scale=1.0">
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="{{ url_for('static',filename='styles/signup.css') }}">
+    </head>
+    <body>
+        <form class="signup-form" action="/signup" method="post">
+            <div class='signup-form__logo-container'>
+                <img class='signup-form__logo' src="{{ url_for('static',filename='Berkhamsted_School_.png') }}" alt='Logo'>
+            </div>
+            <div class='signup-form__content'>
+                <div class='signup-form__header'><b>Create account</b></div>
+                <div class='signup-form__message'><b>{{ message }}</b></div>
+                <input class='signup-form__input' type='text' name='username' placeholder='Enter username'>
+                <input class='signup-form__input' type="email" name='email' placeholder='Enter email'>
+                <input class='signup-form__input' type='password' name='password' placeholder='Enter password'>
+                <button class='signup-form__button' type='submit'>Sign Up</button>
+                <div class='signup-form__links'>
+                    <a href="{{ url_for('login') }}"" class='signup-form__link'><u>Already a member?</u></a>
+                </div>
+            </div>
+        </form>
+    </body>
+</html>
