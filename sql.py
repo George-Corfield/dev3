@@ -145,6 +145,17 @@ class db:
         conn.commit()
         conn.close()
         return users_data
+    
+    def get_org_users(self,orgID):
+        conn=sql.connect(self.dbname)
+        c = conn.cursor()
+        c.execute('''SELECT users.UserID, users.USERNAME
+                  FROM users
+                  WHERE OrgID=?''', (orgID,))
+        users_data = self.sql_to_json(c,c.fetchall())
+        conn.commit()
+        conn.close()
+        return users_data
 
     def sql_to_json(self, c, data):
         row_headers = [x[0] for x in c.description]

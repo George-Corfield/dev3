@@ -101,17 +101,19 @@ def show_user(username):
                 message=''
     organisation_data=db.get_org_info(session['user']['org_id'])
     channel_data = get_rooms()
+    users_list = get_users_list(session['user']['org_id'])
     return render_template('HomePage.html',organisations=organisation_data,
                            channel_data=channel_data,
+                           users_list = users_list,
                            message = message)
     
 def get_rooms():
     room_list = db.get_room_list(session['user']['user_id'])
     return room_list
 
-def get_users_data(rid):
-    users_data = db.get_room_users(rid)
-    return users_data
+def get_users_list(org_id):
+    users_list = db.get_org_users(org_id)
+    return users_list
     
     
 
