@@ -1,5 +1,7 @@
 import sqlite3 as sql
 import hashlib
+
+from flask_socketio import rooms
 from user import User
 import json
 
@@ -69,6 +71,7 @@ class db:
                     RoomID = c.fetchall()
                     conn.commit()
                     self.create_connection(RoomID[0][0],userID)
+                     
             c.execute('''UPDATE users SET OrgID=? WHERE UserID=?''',(OrgID[0][0],userID))
             conn.commit()
             conn.close()
@@ -99,6 +102,14 @@ class db:
                 c.execute('''SELECT RoomID FROM rooms WHERE OrgID=? AND ROOM=?''',(OrgID,channel,))
                 RoomID = c.fetchall()[0][0]; conn.commit()
                 self.create_connection(RoomID,UserID)
+            user_list = self.get_org_users(OrgID)
+            for user in user_list:
+                c.execute('''INSERT INTO rooms(ROOM,OrgID,RoomType) VALUES (?,?,?)''',(user['USERNAME'],OrgID[0][0],'Private'))
+                conn.commit()
+                c.execute('''SELECT RoomID FROM rooms WHERE ROOM=? AND OrgID=?''',(user['USERNAME'],OrgID[0][0],))
+                RoomID = c.fetchall()[0][0]; conn.commit()
+                self.create_connection(self,RoomID,UserID)
+                self.create_connection(self,RoomID,user['UserID']) 
         else:
             return 'Organisation does not exist'
         return None
