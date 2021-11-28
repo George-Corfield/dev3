@@ -26,7 +26,8 @@
                 </div>
                 <h2>Private Messages:</h2>
                 <div class='Private-container'>
-                    
+                    {% for i in users_list %}
+                    <a href='{{ url_for("chat",room_id=)
                 </div>
             {%endif%}
             <p style='color:red'><b>{{ message }}</b></p>
