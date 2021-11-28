@@ -29,7 +29,7 @@
                 <h2>Private Messages:</h2>
                 <div class='Private-container'>
                     {% for i in users_list %}
-                    {% if i.RoomType = 'Private' %}
+                    {% if i.RoomType == 'Private' %}
                         <a href='{{ url_for("chat",room_id=i.RoomID) }}'>
                             <div class='room' id='{{ i.RoomID }}'>
                                 <h4>{{ i['ROOM'] }}</h4>
