@@ -101,6 +101,7 @@ def show_user(username):
                 message=''
     organisation_data=db.get_org_info(session['user']['org_id'])
     channel_data = get_rooms()
+    print(channel_data)
     return render_template('HomePage.html',
                            organisations=organisation_data,
                            channel_data=channel_data,

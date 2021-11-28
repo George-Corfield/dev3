@@ -104,12 +104,12 @@ class db:
                 self.create_connection(RoomID,UserID)
             user_list = self.get_org_users(OrgID)
             for user in user_list:
-                c.execute('''INSERT INTO rooms(ROOM,OrgID,RoomType) VALUES (?,?,?)''',(user['USERNAME'],OrgID[0][0],'Private'))
+                c.execute('''INSERT INTO rooms(ROOM,OrgID,RoomType) VALUES (?,?,?)''',(user['USERNAME'],OrgID,'Private'))
                 conn.commit()
-                c.execute('''SELECT RoomID FROM rooms WHERE ROOM=? AND OrgID=?''',(user['USERNAME'],OrgID[0][0],))
+                c.execute('''SELECT RoomID FROM rooms WHERE ROOM=? AND OrgID=?''',(user['USERNAME'],OrgID,))
                 RoomID = c.fetchall()[0][0]; conn.commit()
-                self.create_connection(self,RoomID,UserID)
-                self.create_connection(self,RoomID,user['UserID']) 
+                self.create_connection(RoomID,UserID)
+                self.create_connection(RoomID,user['UserID']) 
         else:
             return 'Organisation does not exist'
         return None
