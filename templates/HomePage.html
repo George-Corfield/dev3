@@ -6,22 +6,29 @@
     </head>
     <body>
         <div class='container'>
-            <h2>Channels:</h2>
             <p style='color:red'><b>{{ message }}</b></p>
             {% if session.user.org_id == 0 %}
-                <P>Looks like you aren't part of an Organisation yet!</P>
-                <button class='createbtn' id='createOrg'>Create New Organisation</button>
-                <button class='createbtn' id='joinOrg'>Join Existing Organisation</button>
+                <div>
+                    <P>Looks like you aren't part of an Organisation yet!</P>
+                    <button class='createbtn' id='createOrg'>Create New Organisation</button>
+                    <button class='createbtn' id='joinOrg'>Join Existing Organisation</button>
+                </div>
             {% else %}
-                {% for i in channel_data %}
-                <a href='{{ url_for("chat",room_id=i.RoomID) }}'>
-                    <div class='room' id='{{ i.RoomID }}'>
-                        <h4>{{ i['ROOM'] }}</h4>
-                    </div>
-                </a>
-                {% endfor %}
+                <h2>Channels:</h2>
+                <div class='Group-container'>
+                    {% for i in channel_data %}
+                    <a href='{{ url_for("chat",room_id=i.RoomID) }}'>
+                        <div class='room' id='{{ i.RoomID }}'>
+                            <h4>{{ i['ROOM'] }}</h4>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                <h2>Private Messages:</h2>
+                <div class='Private-container'>
+                    
+                </div>
             {%endif%}
-            <!--<h2>Private Messages:</h2>
             <p style='color:red'><b>{{ message }}</b></p>
             {% if session.user.org_id == 0 %}
                 <P>Looks like you aren't part of an Organisation yet!</P>
