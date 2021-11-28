@@ -108,6 +108,10 @@ def show_user(username):
 def get_rooms():
     room_list = db.get_room_list(session['user']['user_id'])
     return room_list
+
+def get_users_data(rid):
+    users_data = db.get_room_users(rid)
+    return users_data
     
     
 
