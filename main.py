@@ -23,7 +23,7 @@ Checked_query = {'on':True,
 def login():
     message = ''
     if current_user.is_authenticated:
-        return(redirect(url_for('show_user')))
+        return(redirect(url_for('show_user',username=session['user']['username'],msg='')))
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -36,7 +36,7 @@ def login():
                 "org_id" : user.orgID
             }
             session.modified = True
-            return redirect(url_for('show_user',username=session['user']['username']))
+            return redirect(url_for('show_user',username=session['user']['username'], msg=''))
         else:
             message = 'Invalid Login Credentials'
     return render_template('login.html',message=message)
@@ -56,7 +56,7 @@ def register():
                 "org_id" : user.orgID
             }
             session.modified = True
-            return redirect(url_for('show_user',username=session['user']['username']))
+            return redirect(url_for('show_user',username=session['user']['username']),msg='')
         else:
             return render_template('signup.html',message=message)
     return render_template('signup.html', message='')
@@ -75,8 +75,7 @@ def list_room(orgname):
     return render_template('Room.html', room_data=room_data)'''
 
 @app.route('/<username>',methods=['GET','POST'])
-def show_user(username):
-    message = ''
+def show_user(username, msg=''):
     print('SESSION LIST',session['user'])
     if request.method =='POST':
         form_name = request.form.get('name')
@@ -84,22 +83,22 @@ def show_user(username):
             org_name = request.form.get('orgname')
             org_psw = request.form.get('orgpass')
             create_channels = Checked_query[request.form.get('CreateChannels')]
-            message = db.create_org(org_name,org_psw,create_channels,session['user']['user_id'])
-            if not message:
+            msg = db.create_org(org_name,org_psw,create_channels,session['user']['user_id'])
+            if not msg:
                 session['user']['org_id'] = db.get_org_id(org_name)
                 session.modified = True
                 message=''
         elif form_name == 'join_org_form':
             org_name = request.form.get('orgname')
             org_psw = request.form.get('orgpass')
-            message = db.join_org(org_name,org_psw,session['user']['user_id'])
-            print(message)
-            if not message:
+            msg = db.join_org(org_name,org_psw,session['user']['user_id'])
+            print('2',msg)
+            if not msg:
                 session['user']['org_id'] = db.get_org_id(org_name)
                 session.modified = True
                 print('SESSION LIST',session['user'])
-                message=''
-        return redirect(url_for('show_user', username=session['user']['username']))
+                msg=''
+        return redirect(url_for('show_user', username=session['user']['username'], msg=msg))
     organisation_data=db.get_org_info(session['user']['org_id'])
     public_channel_data = get_public_rooms()
     private_channel_data = get_private_rooms()
@@ -108,7 +107,7 @@ def show_user(username):
                            organisations=organisation_data,
                            public_channel_data=public_channel_data,
                            private_channel_data=private_channel_data,
-                           message = message)
+                           message = msg)
     
 def get_public_rooms():
     room_list = db.get_public_room_list(session['user']['user_id'])

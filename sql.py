@@ -102,19 +102,28 @@ class db:
                 c.execute('''SELECT RoomID FROM rooms WHERE OrgID=? AND ROOM=?''',(OrgID,channel,))
                 RoomID = c.fetchall()[0][0]; conn.commit()
                 self.create_connection(RoomID,UserID)
-            user_list = self.get_org_users(OrgID)
+            user_list = self.get_org_users(OrgID,UserID)
             for user in user_list:
-                if user['UserID'] != UserID:
-                    c.execute('''INSERT INTO rooms(ROOM,OrgID,RoomType) VALUES (?,?,?)''',('Private',OrgID,'Private'))
-                    conn.commit()
-                    c.execute('''SELECT RoomID FROM rooms WHERE ROOM=? AND OrgID=?''',('Private',OrgID,))
-                    RoomID = c.fetchall()[0]; conn.commit()
-                    for room in RoomID:
-                        self.create_connection(room,UserID)
-                        self.create_connection(room,user['UserID']) 
+                c.execute('''INSERT INTO rooms(ROOM,OrgID,RoomType)
+                          VALUES (?,?,?)''',('Private',OrgID,'Private'))
+                last_rid = c.lastrowid
+                conn.commit()
+                self.create_connection(last_rid,UserID)
+                self.create_connection(last_rid,user['UserID'])
+                
+                
+            # for user in user_list:
+            #     if user['UserID'] != UserID:
+            #         c.execute('''INSERT INTO rooms(ROOM,OrgID,RoomType) VALUES (?,?,?)''',('Private',OrgID,'Private'))
+            #         conn.commit()
+            #         c.execute('''SELECT RoomID FROM rooms WHERE ROOM=? AND OrgID=?''',('Private',OrgID,))
+            #         RoomID = c.fetchall()[0]; conn.commit()
+            #         for room in RoomID:
+            #             self.create_connection(room,UserID)
+            #             self.create_connection(room,user['UserID']) 
         else:
             return 'Organisation does not exist'
-        return None
+        return ''
             
         
         
@@ -159,12 +168,12 @@ class db:
         conn.close()
         return users_data
     
-    def get_org_users(self,orgID):
+    def get_org_users(self,orgID,UserID):
         conn=sql.connect(self.dbname)
         c = conn.cursor()
         c.execute('''SELECT users.UserID, users.USERNAME
                   FROM users
-                  WHERE OrgID=?''', (orgID,))
+                  WHERE OrgID=? AND UserID!=?''', (orgID,UserID,))
         users_data = self.sql_to_json(c,c.fetchall())
         conn.commit()
         conn.close()
@@ -205,20 +214,34 @@ class db:
         conn=sql.connect(self.dbname)
         c = conn.cursor()
         try:
-            c.execute('''SELECT rooms.RoomID, rooms.ROOM , rooms.OrgID,connections.UserID,RoomType
+            c.execute('''SELECT rooms.RoomID, rooms.OrgID
                       FROM rooms
                       INNER JOIN connections
                       ON connections.UserID=? 
                       AND connections.RoomID=rooms.RoomID
                       AND rooms.RoomType=?''',(userID,"Private",))
-            room_data=self.sql_to_json(c,c.fetchall())
-            print(room_data)
+            room_ids=self.sql_to_json(c,c.fetchall())
+            print(room_ids)
+            conn.commit()
+            private_rooms = []
+            for rooms in room_ids:
+                c.execute('''SELECT rooms.RoomID, rooms.ROOM, rooms.OrgID, connections.UserID, users.USERNAME
+                          FROM rooms
+                          INNER JOIN connections
+                          ON connections.RoomID = ?
+                          AND rooms.RoomID = connections.RoomID
+                          AND connections.UserID!=?
+                          INNER JOIN users
+                          ON users.UserID = connections.UserID
+                          ''',(rooms['RoomID'],userID,))
+                room = self.sql_to_json(c,c.fetchall())
+                private_rooms.append(room[0])
         except:
-            room_data=[]
+            private_rooms=[]
         finally:
             conn.commit()
             conn.close()
-            return room_data
+            return private_rooms
     
     
     

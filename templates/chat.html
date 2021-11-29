@@ -9,7 +9,7 @@
         <div class='container'>
             <div class="header_container">
                 <div class='header_container_back'>
-                    <a href="{{ url_for('show_user',username=session.user.username)}}">
+                    <a href="{{ url_for('show_user',username=session.user.username,msg='')}}">
                         <i class="fas fa-home"></i>
                         Home page
                     </a>

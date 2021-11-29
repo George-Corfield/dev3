@@ -78,7 +78,7 @@
                     {% for i in private_channel_data %}
                         <a href='{{ url_for("chat",room_id=i.RoomID) }}'>
                             <div class='room' id='{{ i.RoomID }}'>
-                                <h4>{{ i }}</h4>
+                                <h4>{{ i.USERNAME }}</h4>
                             </div>
                         </a>
                     {%endfor%}
