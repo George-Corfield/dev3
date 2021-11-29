@@ -13,29 +13,74 @@
                     <button class='createbtn' id='createOrg'>Create New Organisation</button>
                     <button class='createbtn' id='joinOrg'>Join Existing Organisation</button>
                 </div>
+                <div id='create_org' class='modal_form'>
+                    <div class='content'>
+                        <form class='create_org_form' action="/{{session.user.username}}" method='POST'>
+                            <div class='header_container'>
+                                <span class='close'>&times;</span>
+                                <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
+                            </div>
+                            <div  class='form_content'>
+                                <label for='orgname'>Create Organisation Name</label>
+                                <input type="hidden" name="name" value='create_org_form' required>
+                                <input class='form_input' type='text' placeholder='Enter Organisation Name' name='orgname' required>
+                                <label for='orgname'>Create Organisation Password</label>
+                                <input class='form_input' type='text' placeholder='Enter Organisation Password' name='orgpass' required>
+                                <label>
+                                    <input class='form_input' type='checkbox' checked='checked' name='CreateChannels' required>Create General Channels
+                                </label>
+                                <button class='form_button' onclick='reset_forms(create_org)' type="submit">Submit</button>
+                                
+                            </div>
+                            <div class='form_footer'>
+                                <button onclick="document.getElementById('create_org').style.display='none'"
+                                class='cancel_button'>Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+    
+                <div id='join_org' class='modal_form'>
+                    <div class='content'>
+                        <form class='join_org_form' action='/{{session.user.username}}' method='POST'>
+                            <div class='header_container'>
+                                <span class='close'>&times;</span>
+                                <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
+                            </div>
+                            <div  class='form_content'>
+                                <label for='orgname'>Organisation Name</label>
+                                <input type="hidden" name="name" value='join_org_form' required>
+                                <input class='form_input' type='text' placeholder='Enter Organisation Name' name='orgname' required >
+                                <label for='orgname'>Organisation Password</label>
+                                <input class='form_input' type='text' placeholder='Enter Organisation Password' name='orgpass' required>
+                                <button class='form_button' type="submit">Submit</button>
+                            </div>
+                            <div class='form_footer'>
+                                <button onclick="document.getElementById('join_org').style.display='none'"
+                                class='cancel_button'>Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             {% else %}
                 <h2>Channels:</h2>
                 <div class='Group-container'>
-                    {% for i in channel_data %}
-                    {% if i.RoomType == 'Public' %}
+                    {% for i in public_channel_data %}
                         <a href='{{ url_for("chat",room_id=i.RoomID) }}'>
                             <div class='room' id='{{ i.RoomID }}'>
                                 <h4>{{ i['ROOM'] }}</h4>
                             </div>
                         </a>
-                    {% endif %}
                     {% endfor %}
                 </div>
                 <h2>Private Messages:</h2>
                 <div class='Private-container'>
-                    {% for i in users_list %}
-                    {% if i.RoomType == 'Private' %}
+                    {% for i in private_channel_data %}
                         <a href='{{ url_for("chat",room_id=i.RoomID) }}'>
                             <div class='room' id='{{ i.RoomID }}'>
-                                <h4>{{ i['ROOM'] }}</h4>
+                                <h4>{{ i }}</h4>
                             </div>
                         </a>
-                    {%endif%}
                     {%endfor%}
                 </div>
             {%endif%}
@@ -56,62 +101,13 @@
             
             
 
-            <div id='create_org' class='modal_form'>
-                <div class='content'>
-                    <form class='create_org_form' action="" method='post'>
-                        <div class='header_container'>
-                            <span class='close'>&times;</span>
-                            <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
-                        </div>
-                        <div  class='form_content'>
-                            <label for='orgname'>Create Organisation Name</label>
-                            <input type="hidden" name="name" value='create_org_form'>
-                            <input class='form_input' type='text' placeholder='Enter Organisation Name' name='orgname' >
-                            <label for='orgname'>Create Organisation Password</label>
-                            <input class='form_input' type='text' placeholder='Enter Organisation Password' name='orgpass' >
-                            <label>
-                                <input class='form_input' type='checkbox' checked='checked' name='CreateChannels'>Create General Channels
-                            </label>
-                            <button class='form_button' type="submit">Submit</button>
-                        </div>
-                        <div class='form_footer'>
-                            <button onclick="document.getElementById('create_org').style.display='none'"
-                            class='cancel_button'>Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div id='join_org' class='modal_form'>
-                <div class='content'>
-                    <form class='join_org_form' action='' method='post'>
-                        <div class='header_container'>
-                            <span class='close'>&times;</span>
-                            <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
-                        </div>
-                        <div  class='form_content'>
-                            <label for='orgname'>Organisation Name</label>
-                            <input type="hidden" name="name" value='join_org_form'>
-                            <input class='form_input' type='text' placeholder='Enter Organisation Name' name='orgname' >
-                            <label for='orgname'>Organisation Password</label>
-                            <input class='form_input' type='text' placeholder='Enter Organisation Password' name='orgpass' >
-                            <button class='form_button' type="submit">Submit</button>
-                        </div>
-                        <div class='form_footer'>
-                            <button onclick="document.getElementById('join_org').style.display='none'"
-                            class='cancel_button'>Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            
         </div>
         <script>
             var create_org_modal = document.getElementById('create_org');
             var join_org_modal = document.getElementById('join_org');
-
             var createOrg = document.getElementById('createOrg');
             var joinOrg = document.getElementById('joinOrg');
-
             var create_span = document.getElementsByClassName('close')[0];
             var join_span = document.getElementsByClassName('close')[1];
             
@@ -138,6 +134,15 @@
                     join_org_modal.style.display='none';
                 }
             }
+
+            (function (){
+                var form = document.forms.createOrg
+                console.log('Here')
+                form.onsubmit = function() {
+                    setTimeout(form.reset, 1000)
+                }
+            })
+         
         </script>
     </body>
 </html>

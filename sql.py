@@ -104,12 +104,14 @@ class db:
                 self.create_connection(RoomID,UserID)
             user_list = self.get_org_users(OrgID)
             for user in user_list:
-                c.execute('''INSERT INTO rooms(ROOM,OrgID,RoomType) VALUES (?,?,?)''',(user['USERNAME'],OrgID,'Private'))
-                conn.commit()
-                c.execute('''SELECT RoomID FROM rooms WHERE ROOM=? AND OrgID=?''',(user['USERNAME'],OrgID,))
-                RoomID = c.fetchall()[0][0]; conn.commit()
-                self.create_connection(RoomID,UserID)
-                self.create_connection(RoomID,user['UserID']) 
+                if user['UserID'] != UserID:
+                    c.execute('''INSERT INTO rooms(ROOM,OrgID,RoomType) VALUES (?,?,?)''',('Private',OrgID,'Private'))
+                    conn.commit()
+                    c.execute('''SELECT RoomID FROM rooms WHERE ROOM=? AND OrgID=?''',('Private',OrgID,))
+                    RoomID = c.fetchall()[0]; conn.commit()
+                    for room in RoomID:
+                        self.create_connection(room,UserID)
+                        self.create_connection(room,user['UserID']) 
         else:
             return 'Organisation does not exist'
         return None
@@ -176,7 +178,7 @@ class db:
         return json_data
 
 
-    def get_room_list(self, userID):
+    def get_public_room_list(self, userID):
         conn=sql.connect(self.dbname)
         c = conn.cursor()
         try:
@@ -184,7 +186,8 @@ class db:
                       FROM rooms
                       INNER JOIN connections
                       ON connections.UserID=? 
-                      AND connections.RoomID=rooms.RoomID''',(userID,))
+                      AND connections.RoomID=rooms.RoomID
+                      AND rooms.RoomType=?''',(userID,"Public",))
             room_data=self.sql_to_json(c,c.fetchall())
         except:
             room_data=[]
@@ -192,6 +195,34 @@ class db:
             conn.commit()
             conn.close()
             return room_data
+        
+        
+        
+        
+        
+        
+    def get_private_room_list(self, userID):
+        conn=sql.connect(self.dbname)
+        c = conn.cursor()
+        try:
+            c.execute('''SELECT rooms.RoomID, rooms.ROOM , rooms.OrgID,connections.UserID,RoomType
+                      FROM rooms
+                      INNER JOIN connections
+                      ON connections.UserID=? 
+                      AND connections.RoomID=rooms.RoomID
+                      AND rooms.RoomType=?''',(userID,"Private",))
+            room_data=self.sql_to_json(c,c.fetchall())
+            print(room_data)
+        except:
+            room_data=[]
+        finally:
+            conn.commit()
+            conn.close()
+            return room_data
+    
+    
+    
+    
     
     def get_room(self, RoomID, OrgID):
         conn=sql.connect(self.dbname)

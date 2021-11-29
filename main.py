@@ -79,37 +79,47 @@ def show_user(username):
     message = ''
     print('SESSION LIST',session['user'])
     if request.method =='POST':
-        form_name = request.form.get('name')
-        if form_name == 'create_org_form':
-            org_name = request.form.get('orgname')
-            org_psw = request.form.get('orgpass')
-            create_channels = Checked_query[request.form.get('CreateChannels')]
-            message = db.create_org(org_name,org_psw,create_channels,session['user']['user_id'])
-            if not message:
-                session['user']['org_id'] = db.get_org_id(org_name)
-                session.modified = True
-                message=''
-        elif form_name == 'join_org_form':
-            org_name = request.form.get('orgname')
-            org_psw = request.form.get('orgpass')
-            message = db.join_org(org_name,org_psw,session['user']['user_id'])
-            print(message)
-            if not message:
-                session['user']['org_id'] = db.get_org_id(org_name)
-                session.modified = True
-                print('SESSION LIST',session['user'])
-                message=''
+        if session['user']['org_id'] == 0:
+            form_name = request.form.get('name')
+            print(form_name)
+            print(request.form)
+            if form_name == 'create_org_form':
+                org_name = request.form.get('orgname')
+                org_psw = request.form.get('orgpass')
+                create_channels = Checked_query[request.form.get('CreateChannels')]
+                message = db.create_org(org_name,org_psw,create_channels,session['user']['user_id'])
+                if not message:
+                    session['user']['org_id'] = db.get_org_id(org_name)
+                    session.modified = True
+                    message=''
+            elif form_name == 'join_org_form':
+                org_name = request.form.get('orgname')
+                org_psw = request.form.get('orgpass')
+                message = db.join_org(org_name,org_psw,session['user']['user_id'])
+                print(message)
+                if not message:
+                    session['user']['org_id'] = db.get_org_id(org_name)
+                    session.modified = True
+                    print('SESSION LIST',session['user'])
+                    message=''
     organisation_data=db.get_org_info(session['user']['org_id'])
-    channel_data = get_rooms()
-    print(channel_data)
+    public_channel_data = get_public_rooms()
+    private_channel_data = get_private_rooms()
+    print(private_channel_data)
     return render_template('HomePage.html',
                            organisations=organisation_data,
-                           channel_data=channel_data,
+                           public_channel_data=public_channel_data,
+                           private_channel_data=private_channel_data,
                            message = message)
     
-def get_rooms():
-    room_list = db.get_room_list(session['user']['user_id'])
+def get_public_rooms():
+    room_list = db.get_public_room_list(session['user']['user_id'])
     return room_list
+
+def get_private_rooms():
+    room_list = db.get_private_room_list(session['user']['user_id'])
+    return room_list
+   
    
 
 '''@app.route('/<username>', methods=['GET','POST'])
