@@ -3,105 +3,126 @@
         <meta charset="utf-8">
         <title>Organisation List</title>
         <link rel="stylesheet" href='../static/styles/organisation.css'><!--"{{ url_for('static',filename='styles/organisation.css') }}-->
+        <script src="https://kit.fontawesome.com/b287734c18.js" crossorigin="anonymous"></script>
     </head>
     <body>
         <div class='container'>
-            <p style='color:red'><b>{{ message }}</b></p>
-            {% if session.user.org_id == 0 %}
-                <div>
+            <div class='header'>
+                    <div class='header_container_back'>
+                        <a href="{{ url_for('show_user',username=session.user.username,msg='')}}">
+                            <i class="fas fa-door-open"></i>
+                            Log Out
+                        </a>
+                    </div>
+                    <div class='header_container_name'>
+                        <span>{{organisations.OrgName}}</span>
+                    </div>
+                    <div class='header_container_hidden'>
+                    </div>
+            </div>
+            <div class='main-container'>
+                <div class='user-container'>
+                    <p>USERDATA</p>
+                </div>
+                <div class='channel-container'>
+                    <p style='color:red'><b>{{ message }}</b></p>
+                    {% if session.user.org_id == 0 %}
+                        <div>
+                            <P>Looks like you aren't part of an Organisation yet!</P>
+                            <button class='createbtn' id='createOrg'>Create New Organisation</button>
+                            <button class='createbtn' id='joinOrg'>Join Existing Organisation</button>
+                        </div>
+                        <div id='create_org' class='modal_form'>
+                            <div class='content'>
+                                <form class='create_org_form' action="/{{session.user.username}}" method='POST'>
+                                    <div class='header_container'>
+                                        <span class='close'>&times;</span>
+                                        <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
+                                    </div>
+                                    <div  class='form_content'>
+                                        <label for='orgname'>Create Organisation Name</label>
+                                        <input type="hidden" name="name" value='create_org_form' required>
+                                        <input class='form_input' type='text' placeholder='Enter Organisation Name' name='orgname' required>
+                                        <label for='orgname'>Create Organisation Password</label>
+                                        <input class='form_input' type='text' placeholder='Enter Organisation Password' name='orgpass' required>
+                                        <label>
+                                            <input class='form_input' type='checkbox' checked='checked' name='CreateChannels' required>Create General Channels
+                                        </label>
+                                        <button class='form_button' onclick='reset_forms(create_org)' type="submit">Submit</button>
+                                        
+                                    </div>
+                                    <div class='form_footer'>
+                                        <button onclick="document.getElementById('create_org').style.display='none'"
+                                        class='cancel_button'>Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+            
+                        <div id='join_org' class='modal_form'>
+                            <div class='content'>
+                                <form class='join_org_form' action='/{{session.user.username}}' method='POST'>
+                                    <div class='header_container'>
+                                        <span class='close'>&times;</span>
+                                        <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
+                                    </div>
+                                    <div  class='form_content'>
+                                        <label for='orgname'>Organisation Name</label>
+                                        <input type="hidden" name="name" value='join_org_form' required>
+                                        <input class='form_input' type='text' placeholder='Enter Organisation Name' name='orgname' required >
+                                        <label for='orgname'>Organisation Password</label>
+                                        <input class='form_input' type='text' placeholder='Enter Organisation Password' name='orgpass' required>
+                                        <button class='form_button' type="submit">Submit</button>
+                                    </div>
+                                    <div class='form_footer'>
+                                        <button onclick="document.getElementById('join_org').style.display='none'"
+                                        class='cancel_button'>Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    {% else %}
+                        <h2>Channels:</h2>
+                        <div class='Group-container'>
+                            {% for i in public_channel_data %}
+                                <div class='room' id='{{ i.RoomID }}'>
+                                    <a href='{{ url_for("chat",room_id=i.RoomID) }}'>
+                                        <h4>{{ i['ROOM'] }}</h4>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <h2>Private Messages:</h2>
+                        <div class='Private-container'>
+                            {% for i in private_channel_data %}
+                                <a href='{{ url_for("chat",room_id=i.RoomID) }}'>
+                                    <div class='room' id='{{ i.RoomID }}'>
+                                        <h4>{{ i.USERNAME }}</h4>
+                                    </div>
+                                </a>
+                            {%endfor%}
+                        </div>
+                    {%endif%}
+                </div>
+                <!--<p style='color:red'><b>{{ message }}</b></p>
+                {% if session.user.org_id == 0 %}
                     <P>Looks like you aren't part of an Organisation yet!</P>
                     <button class='createbtn' id='createOrg'>Create New Organisation</button>
                     <button class='createbtn' id='joinOrg'>Join Existing Organisation</button>
-                </div>
-                <div id='create_org' class='modal_form'>
-                    <div class='content'>
-                        <form class='create_org_form' action="/{{session.user.username}}" method='POST'>
-                            <div class='header_container'>
-                                <span class='close'>&times;</span>
-                                <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
-                            </div>
-                            <div  class='form_content'>
-                                <label for='orgname'>Create Organisation Name</label>
-                                <input type="hidden" name="name" value='create_org_form' required>
-                                <input class='form_input' type='text' placeholder='Enter Organisation Name' name='orgname' required>
-                                <label for='orgname'>Create Organisation Password</label>
-                                <input class='form_input' type='text' placeholder='Enter Organisation Password' name='orgpass' required>
-                                <label>
-                                    <input class='form_input' type='checkbox' checked='checked' name='CreateChannels' required>Create General Channels
-                                </label>
-                                <button class='form_button' onclick='reset_forms(create_org)' type="submit">Submit</button>
-                                
-                            </div>
-                            <div class='form_footer'>
-                                <button onclick="document.getElementById('create_org').style.display='none'"
-                                class='cancel_button'>Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-    
-                <div id='join_org' class='modal_form'>
-                    <div class='content'>
-                        <form class='join_org_form' action='/{{session.user.username}}' method='POST'>
-                            <div class='header_container'>
-                                <span class='close'>&times;</span>
-                                <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
-                            </div>
-                            <div  class='form_content'>
-                                <label for='orgname'>Organisation Name</label>
-                                <input type="hidden" name="name" value='join_org_form' required>
-                                <input class='form_input' type='text' placeholder='Enter Organisation Name' name='orgname' required >
-                                <label for='orgname'>Organisation Password</label>
-                                <input class='form_input' type='text' placeholder='Enter Organisation Password' name='orgpass' required>
-                                <button class='form_button' type="submit">Submit</button>
-                            </div>
-                            <div class='form_footer'>
-                                <button onclick="document.getElementById('join_org').style.display='none'"
-                                class='cancel_button'>Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            {% else %}
-                <h2>Channels:</h2>
-                <div class='Group-container'>
-                    {% for i in public_channel_data %}
-                        <a href='{{ url_for("chat",room_id=i.RoomID) }}'>
-                            <div class='room' id='{{ i.RoomID }}'>
-                                <h4>{{ i['ROOM'] }}</h4>
-                            </div>
-                        </a>
+                {% else %}
+                    {% for i in channel_data %}
+                    <a href='{{ url_for("chat",room_id=i.RoomID) }}'>
+                        <div class='room' id='{{ i.RoomID }}'>
+                            <h4>{{ i['ROOM'] }}</h4>
+                        </div>
+                    </a>
                     {% endfor %}
-                </div>
-                <h2>Private Messages:</h2>
-                <div class='Private-container'>
-                    {% for i in private_channel_data %}
-                        <a href='{{ url_for("chat",room_id=i.RoomID) }}'>
-                            <div class='room' id='{{ i.RoomID }}'>
-                                <h4>{{ i.USERNAME }}</h4>
-                            </div>
-                        </a>
-                    {%endfor%}
-                </div>
-            {%endif%}
-            <!--<p style='color:red'><b>{{ message }}</b></p>
-            {% if session.user.org_id == 0 %}
-                <P>Looks like you aren't part of an Organisation yet!</P>
-                <button class='createbtn' id='createOrg'>Create New Organisation</button>
-                <button class='createbtn' id='joinOrg'>Join Existing Organisation</button>
-            {% else %}
-                {% for i in channel_data %}
-                <a href='{{ url_for("chat",room_id=i.RoomID) }}'>
-                    <div class='room' id='{{ i.RoomID }}'>
-                        <h4>{{ i['ROOM'] }}</h4>
-                    </div>
-                </a>
-                {% endfor %}
-            {%endif%}-->
-            
-            
+                {%endif%}-->
+                
+                
 
-            
+                
+            </div>
         </div>
         <script>
             var create_org_modal = document.getElementById('create_org');
