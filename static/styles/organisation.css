@@ -88,6 +88,23 @@ a:visited{
     margin: 20px;
 }
 
+.user-container{
+    display: flex;
+}
+
+.user{
+    font-size: 200px;
+    color: #113974;
+    justify-items: center;
+    width:100%;
+    text-align: center;
+    margin-top: 10%;
+}
+
+.user_name{
+    font-size: 40px;
+}
+
 
 
 

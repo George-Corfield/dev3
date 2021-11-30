@@ -22,7 +22,12 @@
             </div>
             <div class='main-container'>
                 <div class='user-container'>
-                    <p>USERDATA</p>
+                    <div class='user'>
+                        <p class='user_name'>
+                            {{session.user.username}}
+                        </p>
+                        <i class="fas fa-user"></i>
+                    </div>
                 </div>
                 <div class='channel-container'>
                     <p style='color:red'><b>{{ message }}</b></p>
