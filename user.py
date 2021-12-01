@@ -1,17 +1,20 @@
 import hashlib
+from flask_login import UserMixin
 
-class User:
+class User(UserMixin):
     def __init__(self, username, password, UserID, OrgID):
         self.username = username
         self.password = password
         self.userID = UserID
         self.orgID = OrgID
+        self.is_active = True
+        self.is_authenticated = True
     
     def is_authenticated(self):
-        return True
+        return self.is_authenticated
 
     def is_active(self):
-        return True
+        return self.is_active
 
     def is_anonymous(self):
         return False

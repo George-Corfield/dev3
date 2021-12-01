@@ -154,7 +154,7 @@ class db:
         json_data = self.sql_to_json(c, user_data)
         conn.commit()
         conn.close()
-        return User(json_data[0]['USERNAME'], json_data[0]['PASSWORD'], json_data[0]['UserID'], json_data[0]['OrgID']) if user_data else None
+        return [json_data[0]['USERNAME'], json_data[0]['PASSWORD'], json_data[0]['UserID'], json_data[0]['OrgID']] if user_data else None
     
     def get_room_users(self,roomID):
         conn=sql.connect(self.dbname)
@@ -221,7 +221,6 @@ class db:
                       AND connections.RoomID=rooms.RoomID
                       AND rooms.RoomType=?''',(userID,"Private",))
             room_ids=self.sql_to_json(c,c.fetchall())
-            print(room_ids)
             conn.commit()
             private_rooms = []
             for rooms in room_ids:

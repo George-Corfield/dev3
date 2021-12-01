@@ -6,14 +6,16 @@ from sql import db
 import secrets
 from datetime import datetime
 from encryption import encrypt, decrypt
+from user import User
 
 #testing 1
 app = Flask(__name__)
 app.secret_key='Z1Uay8j78XHKaltcT0cQFQ'
 socketio = SocketIO(app)
 login_manager = LoginManager()
-login_manager.login_view='login'
 login_manager.init_app(app)
+login_manager.login_view='login'
+
 db = db('chat')
 Checked_query = {'on':True,
                  'off':False}
@@ -27,14 +29,18 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        user = db.get_user(username)
+        user = load_user(username)
         if user and user.check_password(password):
-            login_user(user)
+            print(user.__dict__)
+            login_user(user,remember=True)
             session['user'] = {
                 "user_id" : user.userID,
                 "username" : user.username,
                 "org_id" : user.orgID
             }
+            '''ADD STATUS AND ROLE TO SESSION'''
+            '''CREATE ADMIN CLASS IN USER.PY - DELETE FUNCTIONALITY, ADDED TO EVERY PUBLIC ROOM'''
+            print(current_user.is_authenticated)
             session.modified = True
             return redirect(url_for('show_user',username=session['user']['username'], msg=''))
         else:
@@ -61,22 +67,11 @@ def register():
             return render_template('signup.html',message=message)
     return render_template('signup.html', message='')
 
-'''@app.route('/<orgname>', methods=['GET','POST'])
-def list_room(orgname):
-    room_data = []
-    room_list = db.get_room_list(session['user']['user_id'])
-    for i in room_list:
-        room_data.append(
-            {
-                "room":'test',
-                'room_id':i[0]
-            }
-        )
-    return render_template('Room.html', room_data=room_data)'''
 
 @app.route('/<username>',methods=['GET','POST'])
 def show_user(username, msg=''):
     print('SESSION LIST',session['user'])
+    print('Current User', current_user.is_active)
     if request.method =='POST':
         form_name = request.form.get('name')
         if form_name == 'create_org_form':
@@ -87,22 +82,23 @@ def show_user(username, msg=''):
             if not msg:
                 session['user']['org_id'] = db.get_org_id(org_name)
                 session.modified = True
-                message=''
+                msg=''
         elif form_name == 'join_org_form':
             org_name = request.form.get('orgname')
             org_psw = request.form.get('orgpass')
             msg = db.join_org(org_name,org_psw,session['user']['user_id'])
-            print('2',msg)
             if not msg:
                 session['user']['org_id'] = db.get_org_id(org_name)
                 session.modified = True
                 print('SESSION LIST',session['user'])
                 msg=''
+        '''1.   elif form is add room
+           2.   elif form is change status
+           3.   #OPTIONAL# DELETE ROOM FUNCTION AS ADMIN'''
         return redirect(url_for('show_user', username=session['user']['username'], msg=msg))
     organisation_data=db.get_org_info(session['user']['org_id'])
     public_channel_data = get_public_rooms()
     private_channel_data = get_private_rooms()
-    print(private_channel_data)
     return render_template('HomePage.html',
                            organisations=organisation_data,
                            public_channel_data=public_channel_data,
@@ -117,27 +113,15 @@ def get_private_rooms():
     room_list = db.get_private_room_list(session['user']['user_id'])
     return room_list
    
-   
 
-'''@app.route('/<username>', methods=['GET','POST'])
-def list_room(username):
-    print(session['user'])
-    room_data = []
-    room_list = db.get_room_list(session['user']['user_id'])
-    for i in room_list:
-        room_data.append(
-            {
-                "room":'test',
-                'room_id':i[0]
-            }
-        )
-    return render_template('Room.html', room_data=room_data)'''
 
 
 
 @app.route('/chat/<room_id>', methods=['GET','POST'])
 def chat(room_id):
     rid = room_id
+    '''CREATE ADD USER BUTTON
+        #OPTIONAL# HOVER ON USER FUNCTIONALITY'''
     room_data = get_room_data(rid)
     messages = get_message_history(rid)
     current_date = get_date()
@@ -200,7 +184,14 @@ def partition(array,start_index, end_index):
 
 @login_manager.user_loader
 def load_user(username):
-    return db.get_user(username)
+    user_data = db.get_user(username)
+    if user_data:
+        return User(user_data[0],user_data[1],user_data[2],user_data[3])
+    return None
+
+'''ADD LOGOUT FUNCTION'''
+
+
 
 
 @socketio.on('join_room')

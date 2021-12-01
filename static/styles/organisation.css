@@ -90,6 +90,7 @@ a:visited{
 
 .user-container{
     display: flex;
+    flex-direction: column;
 }
 
 .user{
@@ -98,11 +99,22 @@ a:visited{
     justify-items: center;
     width:100%;
     text-align: center;
-    margin-top: 10%;
+    margin-top: 5%;
 }
 
 .user_name{
     font-size: 40px;
+}
+
+table th, td{
+    padding: 5px 40px;
+    text-align: center;
+    font-size: large;
+}
+
+
+.user_data{
+    margin:10% auto;
 }
 
 

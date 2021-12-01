@@ -28,6 +28,20 @@
                         </p>
                         <i class="fas fa-user"></i>
                     </div>
+                    <div class='user_data'>
+                        <table class='user_data_table'>
+                            <tr>
+                                <th><u>Username</u></th>
+                                <th><u>Status</u></th>
+                                <th><u>User Type</u></th>
+                            </tr>
+                            <tr>
+                                <td>{{session.user.username}}</td>
+                                <td>{{session.user.status}}</td>
+                                <td>{{session.user.usertype}}</td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
                 <div class='channel-container'>
                     <p style='color:red'><b>{{ message }}</b></p>
