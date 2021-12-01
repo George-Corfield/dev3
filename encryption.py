@@ -80,7 +80,6 @@ class AES:
 
     def encrypt_mode_cbc(self,plaintext,iv):
         plaintext = self.pad(plaintext)
-        print('1',plaintext)
         cipher_text = []
         for block in range(len(plaintext)//16):
             encrypted_block = self.encrypt(self.XOR(plaintext[16*block:16*(block+1)],iv))
@@ -95,7 +94,6 @@ class AES:
             plaintext_block = self.XOR(decrypted_block,iv)
             plaintext.append(plaintext_block)
             iv = ciphertext[16*block:16*(block+1)]
-            print('2',plaintext)
         return self.remove_padding(b''.join(plaintext))
 
 
@@ -211,7 +209,6 @@ def decrypt(password,ciphertext):
         return None
     key1 = AES(key2).decrypt_mode_cbc(encrpyted_key,IV)
     plaintext = AES(key1).decrypt_mode_cbc(ciphertext,IV)
-    print(plaintext)
     return plaintext.decode('utf8')
     
      

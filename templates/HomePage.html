@@ -15,7 +15,7 @@
                         </a>
                     </div>
                     <div class='header_container_name'>
-                        <span>{{organisations.OrgName}}</span>
+                        <span>{{ organisations.OrgName }}</span>
                     </div>
                     <div class='header_container_hidden'>
                     </div>
@@ -24,7 +24,7 @@
                 <div class='user-container'>
                     <div class='user'>
                         <p class='user_name'>
-                            {{session.user}}
+                            {{session.user.username}}
                         </p>
                         <i class="fas fa-user"></i>
                     </div>
@@ -38,11 +38,40 @@
                             <tr>
                                 <td>{{session.user.username}}</td>
                                 <td>{{session.user.status}}</td>
-                                <td>{{session.user.usertype}}</td>
+                                <td>{{session.user.user_role}}</td>
                             </tr>
                         </table>
+                        <div>
+                            <button class='updatebtn' id='updateStatus'>Change Status</button>
+                        </div>
+                    </div>
+                    <div id='update_status' class='modal_form'>
+                        <div class='content'>
+                            <form class='update_status_form' action='/{{session.user.username}}' method='POST'>
+                                <div class='header_container'>
+                                    <span class='close'>&times;</span>
+                                    <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
+                                </div>
+                                <div  class='form_content'>
+                                    <input type="hidden" name="name" value='update_status_form' required>
+                                    <label for='statuses'>Update your status:</label>
+                                    <select id='statuses' name='status'>
+                                        {% for status in status_info %}
+                                            <option value='{{status.StatusID}}'>{{status.STATUS}}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class='form_button' type="submit">Submit</button>
+                                </div>
+                                <div class='form_footer'>
+                                    <button onclick="document.getElementById('update_status').style.display='none'"
+                                    class='cancel_button'>Cancel</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
+                
+                
                 <div class='channel-container'>
                     <p style='color:red'><b>{{ message }}</b></p>
                     {% if session.user.org_id == 0 %}
@@ -143,30 +172,53 @@
                 
             </div>
         </div>
-        <script>
+    </body>
+    <script>
+        window.onload = function(){
+            console.log(document.getElementById('joinOrg'))
             var create_org_modal = document.getElementById('create_org');
             var join_org_modal = document.getElementById('join_org');
+            var update_status_modal = document.getElementById('update_status');
+
             var createOrg = document.getElementById('createOrg');
             var joinOrg = document.getElementById('joinOrg');
-            var create_span = document.getElementsByClassName('close')[0];
-            var join_span = document.getElementsByClassName('close')[1];
+            var updateStatus = document.getElementById('updateStatus');
+
+            var create_span = document.getElementsByClassName('close')[1];
+            var join_span = document.getElementsByClassName('close')[2];
+            var update_span = document.getElementsByClassName('close')[0]
             
 
-            createOrg.onclick = function(){
-                create_org_modal.style.display='block';
+            updateStatus.onclick = function(){
+                update_status_modal.style.display='block';
             }
 
-            joinOrg.onclick = function(){
-                join_org_modal.style.display='block';
+            update_span.onclick = function(){
+                update_status_modal.style.display='none'
             }
 
-            create_span.onclick = function(){
-                create_org_modal.style.display='none';
+
+            if (joinOrg != null && createOrg!= null){
+                createOrg.onclick = function(){
+                    create_org_modal.style.display='block';
+                }
+
+                joinOrg.onclick = function(){
+                    join_org_modal.style.display='block';
+                }
+
+                create_span.onclick = function(){
+                    create_org_modal.style.display='none';
+                }
+
+                join_span.onclick = function(){
+                    join_org_modal.style.display='none';
+                }
             }
 
-            join_span.onclick = function(){
-                join_org_modal.style.display='none';
-            }
+
+
+           
 
             window.onclick = function(event){
                 if (event.target == create_org_modal || event.target == join_org_modal) {
@@ -175,17 +227,13 @@
                 }
             }
 
-            (function (){
-                var form = document.forms.createOrg
-                console.log('Here')
-                form.onsubmit = function() {
-                    setTimeout(form.reset, 1000)
-                }
-            })
-         
-        </script>
-    </body>
+        }
+        
+       
+     
+    </script>
 </html>
+
 
 
 

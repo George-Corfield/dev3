@@ -164,17 +164,36 @@ class db:
         conn.commit()
         conn.close()
         return status[0][0]
+    
+    def get_statuses(self):
+        conn = sql.connect(self.dbname)
+        c = conn.cursor()
+        c.execute('''SELECT * FROM status''')
+        statuses = self.sql_to_json(c,c.fetchall())
+        conn.commit()
+        conn.close()
+        return statuses
 
     def update_status(self,userID,status):
         conn = sql.connect(self.dbname)
         c = conn.cursor()
-        c.execute('''UPDATE users INNER JOIN ''' )
+        c.execute('''UPDATE users
+                  SET StatusID = ?
+                  WHERE UserID = ?'''
+                  ,(status,userID,))
+        conn.commit()
+        conn.close()
+        return None
+
+
 
     def get_role(self,RoleID):
         conn = sql.connect(self.dbname)
         c = conn.cursor()
+        print(RoleID)
         c.execute('''SELECT ROLE FROM roles WHERE RoleID=?''',(RoleID,))
         role = c.fetchall()
+        print(role)
         conn.commit()
         conn.close()
         return role[0][0]
@@ -301,7 +320,10 @@ class db:
         Org_data = self.sql_to_json(c,c.fetchall())
         conn.commit()
         conn.close()
-        return Org_data
+        if Org_data:
+            return Org_data[0]
+        else:
+            return []
         
             
     
@@ -360,4 +382,3 @@ class db:
 
 if __name__ == '__main__':
     run = db('chat')
-    print(run.get_messages(1))

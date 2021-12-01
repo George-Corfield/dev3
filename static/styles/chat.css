@@ -99,8 +99,136 @@ body{
     flex-direction: column;
     background: #2969b0;
     color: white;
-    padding: 0 40
+    padding: 10 40
 }
+
+.user_list_username{
+    margin: 10 auto;
+}
+
+.modal_form{
+    display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 200; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.add_user_form{
+    margin-bottom: 0;
+}
+
+.content{
+    background-color: #fefefe;
+    margin: auto;
+    border: 1px solid #888;
+    width: 40%;
+    border-radius: 20px;
+}
+
+.form_header_container{
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    padding: 42px;
+    background: #fdfdfd;
+    overflow: hidden;
+    position: relative;
+    text-align: center;
+}
+
+.form_header_container span{
+    float: right;
+    padding-top: 16px;
+}
+
+.close{
+    position: absolute;
+    right:25px;
+    top:0;
+    color:black;
+    font-size: 35px;
+    font-weight: bold;
+}
+
+.form_header_container_image{
+    display: block;
+    max-width: 175px;
+    margin: 10 auto;
+}
+
+.form_content{
+    padding: 42px;
+    background: #fdfdfd;
+    font-size: 22px;
+}
+
+.form_input{
+    width: 100%;
+    margin-bottom: 14px;
+    padding: 14px;
+    border-radius: 10px;
+    border: 2px solid #dddddd;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.5s;
+}
+
+.form_button{
+    padding: 14px;
+    color: #ffffff;
+    font-weight: bold;
+    background: #0042b5;
+    margin-top: 21px;
+    width: 100%;
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.form_input:focus{
+    border-color: #0042b5;
+
+}
+
+
+.form_input::placeholder{
+    color: #aaaaaa;
+}
+
+.modal_form button:hover{
+    opacity: 80%;
+}
+
+.cancel_button{
+    padding: 14px;
+    color: #ffffff;
+    font-weight: bold;
+    background: #b50000;
+    margin-top: 21px;
+    width: 100%;
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.form_footer{
+    padding: 42px;
+    background: rgba(0,0,0,0.3);
+    overflow: hidden;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+
+
+
 
 .messages_container{
     display: flex;

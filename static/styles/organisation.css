@@ -19,6 +19,7 @@ a:visited{
 
 
 
+
 .container{
     box-sizing: border-box;
     overflow: hidden;
@@ -41,8 +42,9 @@ a:visited{
     background: #113974;
     min-width: none;
     color: white ;
-    font-size: large;
-    font-weight: bold;
+    font-size: larger;
+    font-weight: bolder;
+    text-align: center;
 }
 
 .header_container_back{
@@ -56,6 +58,8 @@ a:visited{
     flex:2;
     justify-content: center;
 }
+
+
 
 .header_container_hidden{
     display: flex;
@@ -163,7 +167,8 @@ label {
 }
 
 .create_org_form,
-.join_org_form{
+.join_org_form,
+.update_status_form{
     margin-bottom: 0;
 }
 
@@ -178,7 +183,7 @@ label {
     text-align: center;
 }
 
-span{
+.header_container span{
     float: right;
     padding-top: 16px;
 }

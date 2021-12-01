@@ -38,7 +38,11 @@
                             </div>
                         {%endif%}
                         {%endfor%}
+                        <div>
+                            <button class='addbtn' id='addUser'>Add New User</button>
+                        </div>
                     </div>
+                    
                 </div>
                 <div class='messages_container'>
                     <div class='messages' id='messages'>
@@ -96,10 +100,55 @@
                 </div>
             </div>
         </div>
+        <div id='add_user' class='modal_form'>
+            <div class='content'>
+                <form class='add_user_form' action="/chat/{{room_data.RoomID}}" method='POST'>
+                    <div class='form_header_container'>
+                        <span class='close'>&times;</span>
+                        <img class='form_header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
+                    </div>
+                    <div  class='form_content'>
+                        <input type="hidden" name="name" value='add_user_form' required>
+                                    <label for='user_choice'>Select a user to add:</label>
+                                    <select id='users' name='chosen_user'>
+                                        {% for user in OrgData %}
+                                            <option value='{{user.UserID}}'>{{status.USERNAME}}</option>
+                                        {% endfor %}
+                                    </select>
+                        <button class='form_button' type="submit">Submit</button>
+                        
+                    </div>
+                    <div class='form_footer'>
+                        <button onclick="document.getElementById('add_user').style.display='none'"
+                        class='cancel_button'>Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
     <script type="text/javascript" charset="utf-8">
+
+        var add_user_modal = document.getElementById('add_user');
+        var addUser = document.getElementById('addUser');
+        var add_span = document.getElementsByClassName('close')[0];
+
+        addUser.onclick = function(){
+            add_user_modal.style.display = 'block';
+            console.log('done')
+        }
+
+        add_span.onclick = function(){
+            add_user_modal.style.display='none';
+        }
+
+        window.onclick = function(event){
+            if(event.target == add_user_modal){
+                add_user_modal.style.display='none';
+            }
+        }
+
 
         var socket = io.connect()
 
@@ -197,6 +246,8 @@
             }  
             
         })
+
+        
         /*var form = $('#messageform').on('submit', function(e){
             let message = 
         })*/

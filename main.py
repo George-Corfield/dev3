@@ -37,8 +37,8 @@ def login():
                 "user_id" : user.userID,
                 "username" : user.username,
                 "org_id" : user.orgID,
-                "user_role" : user.permission,
-                "statusID" : db.get_status(user.statusID)
+                "user_role" : db.get_role(user.permission),
+                "status" : db.get_status(user.statusID)
             }
             '''ADD STATUS AND ROLE TO SESSION'''
             '''CREATE ADMIN CLASS IN USER.PY - DELETE FUNCTIONALITY, ADDED TO EVERY PUBLIC ROOM'''
@@ -63,7 +63,7 @@ def register():
                 "username" : user.username,
                 "org_id" : user.orgID,
                 "user_role" : db.get_role(user.permission),
-                "statusID" : db.get_status(user.statusID)
+                "status" : db.get_status(user.statusID)
             }
             session.modified = True
             return redirect(url_for('show_user',username=session['user']['username']),msg='')
@@ -72,7 +72,7 @@ def register():
     return render_template('signup.html', message='')
 
 
-@app.route('/<username>',methods=['GET','POST'])
+@app.route('/<username>',methods=['GET','POST','PUT'])
 def show_user(username, msg=''):
     print('SESSION LIST',session['user'])
     print('Current User', current_user.is_active)
@@ -96,15 +96,23 @@ def show_user(username, msg=''):
                 session.modified = True
                 print('SESSION LIST',session['user'])
                 msg=''
+        elif form_name == 'update_status_form':
+            status_to_change = request.form.get('status')
+            msg = db.update_status(session['user']['user_id'], status_to_change)
+            if not msg:
+                session['user']['status'] = db.get_status(status_to_change)
+                session.modified = True
+                msg=''
         '''1.   elif form is add room
-           2.   elif form is change status
            3.   #OPTIONAL# DELETE ROOM FUNCTION AS ADMIN'''
         return redirect(url_for('show_user', username=session['user']['username'], msg=msg))
     organisation_data=db.get_org_info(session['user']['org_id'])
+    status_data = db.get_statuses()
     public_channel_data = get_public_rooms()
     private_channel_data = get_private_rooms()
     return render_template('HomePage.html',
                            organisations=organisation_data,
+                           status_info = status_data,
                            public_channel_data=public_channel_data,
                            private_channel_data=private_channel_data,
                            message = msg)
@@ -126,6 +134,7 @@ def chat(room_id):
     rid = room_id
     '''CREATE ADD USER BUTTON
         #OPTIONAL# HOVER ON USER FUNCTIONALITY'''
+    org_data = get_org_data()
     room_data = get_room_data(rid)
     messages = get_message_history(rid)
     current_date = get_date()
@@ -140,6 +149,12 @@ def get_room_data(rid):
     room_data = db.get_room(rid,session['user']['org_id'])
     print(room_data)
     return room_data[0]
+
+def get_org_data():
+    org_users = db.get_org_users(session['user']['org_id'],session['user']['user_id'])
+    org_info = db.get_org_info(session['user']['org_id'])
+    org_info['users'] = org_users
+    print(org_info)
 
 def get_users_data(rid):
     users_data = db.get_room_users(rid)
