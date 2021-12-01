@@ -36,7 +36,9 @@ def login():
             session['user'] = {
                 "user_id" : user.userID,
                 "username" : user.username,
-                "org_id" : user.orgID
+                "org_id" : user.orgID,
+                "user_role" : user.permission,
+                "statusID" : db.get_status(user.statusID)
             }
             '''ADD STATUS AND ROLE TO SESSION'''
             '''CREATE ADMIN CLASS IN USER.PY - DELETE FUNCTIONALITY, ADDED TO EVERY PUBLIC ROOM'''
@@ -59,7 +61,9 @@ def register():
             session['user']={
                 "user_id" : user.userID,
                 "username" : user.username,
-                "org_id" : user.orgID
+                "org_id" : user.orgID,
+                "user_role" : db.get_role(user.permission),
+                "statusID" : db.get_status(user.statusID)
             }
             session.modified = True
             return redirect(url_for('show_user',username=session['user']['username']),msg='')
@@ -186,7 +190,7 @@ def partition(array,start_index, end_index):
 def load_user(username):
     user_data = db.get_user(username)
     if user_data:
-        return User(user_data[0],user_data[1],user_data[2],user_data[3])
+        return User(user_data[0],user_data[1],user_data[2],user_data[3],user_data[4],user_data[5])
     return None
 
 '''ADD LOGOUT FUNCTION'''

@@ -2,11 +2,13 @@ import hashlib
 from flask_login import UserMixin
 
 class User(UserMixin):
-    def __init__(self, username, password, UserID, OrgID):
+    def __init__(self, username, password, UserID, OrgID, StatusID, ROLE):
         self.username = username
         self.password = password
         self.userID = UserID
         self.orgID = OrgID
+        self.statusID = StatusID
+        self.permission = ROLE
         self.is_active = True
         self.is_authenticated = True
     

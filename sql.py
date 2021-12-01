@@ -45,7 +45,7 @@ class db:
         conn=sql.connect(self.dbname)
         c=conn.cursor()
         if self.username_exists(username) == 0:
-            c.execute('''INSERT INTO users(EMAIL,USERNAME,PASSWORD,OrgID) VALUES (?,?,?,?)''', (email,username,password,0))
+            c.execute('''INSERT INTO users(EMAIL,USERNAME,PASSWORD,OrgID,statusID,ROLE) VALUES (?,?,?,?,?,?)''', (email,username,password,0,3,3))
             conn.commit()
         else:
             return 'Username already exists'
@@ -154,8 +154,31 @@ class db:
         json_data = self.sql_to_json(c, user_data)
         conn.commit()
         conn.close()
-        return [json_data[0]['USERNAME'], json_data[0]['PASSWORD'], json_data[0]['UserID'], json_data[0]['OrgID']] if user_data else None
+        return [json_data[0]['USERNAME'], json_data[0]['PASSWORD'], json_data[0]['UserID'], json_data[0]['OrgID'], json_data[0]['StatusID'], json_data[0]['ROLE']] if user_data else None
     
+    def get_status(self,statusID):
+        conn = sql.connect(self.dbname)
+        c = conn.cursor()
+        c.execute('''SELECT STATUS FROM status WHERE StatusID=?''',(statusID,))
+        status = c.fetchall()
+        conn.commit()
+        conn.close()
+        return status[0][0]
+
+    def update_status(self,userID,status):
+        conn = sql.connect(self.dbname)
+        c = conn.cursor()
+        c.execute('''UPDATE users INNER JOIN ''' )
+
+    def get_role(self,RoleID):
+        conn = sql.connect(self.dbname)
+        c = conn.cursor()
+        c.execute('''SELECT ROLE FROM roles WHERE RoleID=?''',(RoleID,))
+        role = c.fetchall()
+        conn.commit()
+        conn.close()
+        return role[0][0]
+
     def get_room_users(self,roomID):
         conn=sql.connect(self.dbname)
         c = conn.cursor()
