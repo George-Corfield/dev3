@@ -40,7 +40,9 @@ def login():
                 "user_role" : db.get_role(user.permission),
                 "status" : db.get_status(user.statusID)
             }
-            '''ADD STATUS AND ROLE TO SESSION'''
+            if session['user']['status'] == 'Offline':
+                msg = db.update_status(session['user']['status'],3)
+                session['user']['status'] = db.get_status(3)
             '''CREATE ADMIN CLASS IN USER.PY - DELETE FUNCTIONALITY, ADDED TO EVERY PUBLIC ROOM'''
             print(current_user.is_authenticated)
             session.modified = True
@@ -103,8 +105,10 @@ def show_user(username, msg=''):
                 session['user']['status'] = db.get_status(status_to_change)
                 session.modified = True
                 msg=''
-        '''1.   elif form is add room
-           3.   #OPTIONAL# DELETE ROOM FUNCTION AS ADMIN'''
+        elif form_name == 'create_room_form':
+            room_name = request.form.get('roomname')
+            msg = db.create_room(room_name,session['user']['user_id'],session['user']['org_id'])
+        '''3.   #OPTIONAL# DELETE ROOM FUNCTION AS ADMIN'''
         return redirect(url_for('show_user', username=session['user']['username'], msg=msg))
     organisation_data=db.get_org_info(session['user']['org_id'])
     status_data = db.get_statuses()
@@ -131,9 +135,14 @@ def get_private_rooms():
 
 @app.route('/chat/<room_id>', methods=['GET','POST'])
 def chat(room_id):
+    if request.method=='POST':
+        form_name = request.form.get('name')
+        if form_name == 'add_user_form':
+            user_to_add = request.form.get('chosen_user')
+            msg = db.add_user_to_room(user_to_add,room_id)
+        return redirect(url_for('chat',room_id=room_id))
     rid = room_id
-    '''CREATE ADD USER BUTTON
-        #OPTIONAL# HOVER ON USER FUNCTIONALITY'''
+        #OPTIONAL# HOVER ON USER FUNCTIONALITY
     org_data = get_org_data()
     room_data = get_room_data(rid)
     messages = get_message_history(rid)
@@ -143,7 +152,8 @@ def chat(room_id):
                             room_data=room_data, 
                             users_data=users_data, 
                             message_history=messages,
-                            current_date=str(current_date))
+                            current_date=str(current_date),
+                            org_data=org_data)
 
 def get_room_data(rid):
     room_data = db.get_room(rid,session['user']['org_id'])
@@ -154,7 +164,7 @@ def get_org_data():
     org_users = db.get_org_users(session['user']['org_id'],session['user']['user_id'])
     org_info = db.get_org_info(session['user']['org_id'])
     org_info['users'] = org_users
-    print(org_info)
+    return org_info
 
 def get_users_data(rid):
     users_data = db.get_room_users(rid)

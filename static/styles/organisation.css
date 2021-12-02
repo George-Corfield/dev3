@@ -168,7 +168,8 @@ label {
 
 .create_org_form,
 .join_org_form,
-.update_status_form{
+.update_status_form,
+.create_room_form{
     margin-bottom: 0;
 }
 

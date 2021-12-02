@@ -91,7 +91,7 @@
                                         <label for='orgname'>Create Organisation Name</label>
                                         <input type="hidden" name="name" value='create_org_form' required>
                                         <input class='form_input' type='text' placeholder='Enter Organisation Name' name='orgname' required>
-                                        <label for='orgname'>Create Organisation Password</label>
+                                        <label for='orgpass'>Create Organisation Password</label>
                                         <input class='form_input' type='text' placeholder='Enter Organisation Password' name='orgpass' required>
                                         <label>
                                             <input class='form_input' type='checkbox' checked='checked' name='CreateChannels' required>Create General Channels
@@ -118,7 +118,7 @@
                                         <label for='orgname'>Organisation Name</label>
                                         <input type="hidden" name="name" value='join_org_form' required>
                                         <input class='form_input' type='text' placeholder='Enter Organisation Name' name='orgname' required >
-                                        <label for='orgname'>Organisation Password</label>
+                                        <label for='orgpass'>Organisation Password</label>
                                         <input class='form_input' type='text' placeholder='Enter Organisation Password' name='orgpass' required>
                                         <button class='form_button' type="submit">Submit</button>
                                     </div>
@@ -150,6 +150,29 @@
                                 </a>
                             {%endfor%}
                         </div>
+                        <div>
+                            <button class='createbtn' id='createRoom'>Create New Room</button>
+                        </div>
+                        <div id='create_room' class='modal_form'>
+                            <div class='content'>
+                                <form class='create_room_form' action='/{{session.user.username}}' method='POST'>
+                                    <div class='header_container'>
+                                        <span class='close'>&times;</span>
+                                        <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
+                                    </div>
+                                    <div  class='form_content'>
+                                        <label for='roomname'>Room Name</label>
+                                        <input type="hidden" name="name" value='create_room_form' required>
+                                        <input class='form_input' type='text' placeholder='Enter Room Name' name='roomname' required >
+                                        <button class='form_button' type="submit">Submit</button>
+                                    </div>
+                                    <div class='form_footer'>
+                                        <button onclick="document.getElementById('create_room').style.display='none'"
+                                        class='cancel_button'>Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     {%endif%}
                 </div>
                 <!--<p style='color:red'><b>{{ message }}</b></p>
@@ -175,18 +198,21 @@
     </body>
     <script>
         window.onload = function(){
-            console.log(document.getElementById('joinOrg'))
+            console.log(document.getElementsByClassName('close'))
             var create_org_modal = document.getElementById('create_org');
             var join_org_modal = document.getElementById('join_org');
             var update_status_modal = document.getElementById('update_status');
+            var create_room_modal = document.getElementById('create_room');
 
             var createOrg = document.getElementById('createOrg');
             var joinOrg = document.getElementById('joinOrg');
             var updateStatus = document.getElementById('updateStatus');
+            var createRoom = document.getElementById('createRoom');
 
             var create_span = document.getElementsByClassName('close')[1];
             var join_span = document.getElementsByClassName('close')[2];
-            var update_span = document.getElementsByClassName('close')[0]
+            var update_span = document.getElementsByClassName('close')[0];
+            var create_room_span = document.getElementsByClassName('close')[1];/*only 2 picked up by DOM as only 2 forms are loaded*/
             
 
             updateStatus.onclick = function(){
@@ -216,14 +242,29 @@
                 }
             }
 
+            if (createRoom != null){
+                createRoom.onclick =function(){
+                    create_room_modal.style.display ='block';
+                }
+
+                create_room_span.onclick = function(){
+                    create_room_modal.style.display='none';
+                }
+            }
+
 
 
            
 
             window.onclick = function(event){
-                if (event.target == create_org_modal || event.target == join_org_modal) {
+                if (event.target == create_org_modal 
+                    || event.target == join_org_modal
+                    || event.target == update_status_modal
+                    || event.target == create_room_modal) {
                     create_org_modal.style.display='none';
                     join_org_modal.style.display='none';
+                    update_status_modal.style.display='none';
+                    create_room_modal.style.display='none';
                 }
             }
 

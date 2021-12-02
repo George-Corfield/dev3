@@ -45,7 +45,7 @@ class db:
         conn=sql.connect(self.dbname)
         c=conn.cursor()
         if self.username_exists(username) == 0:
-            c.execute('''INSERT INTO users(EMAIL,USERNAME,PASSWORD,OrgID,statusID,ROLE) VALUES (?,?,?,?,?,?)''', (email,username,password,0,3,3))
+            c.execute('''INSERT INTO users(EMAIL,USERNAME,PASSWORD,OrgID,statusID,RoleID) VALUES (?,?,?,?,?,?)''', (email,username,password,0,3,3))
             conn.commit()
         else:
             return 'Username already exists'
@@ -85,6 +85,28 @@ class db:
         c.execute('''INSERT INTO connections(RoomID,UserID) VALUES (?,?)''',(RoomID,UserID,))
         conn.commit()
         conn.close()
+        
+    def connection_exists(self,RoomID,UserID):
+        conn = sql.connect(self.dbname)
+        c = conn.cursor()
+        c.execute('''SELECT EXISTS (SELECT 1 FROM connections
+                                    WHERE UserID=?
+                                    AND RoomID = ?)''',
+                    (UserID,RoomID,))
+        return c.fetchall()[0][0]
+    
+    def create_room(self,RoomName,UserID,OrgID):
+        conn = sql.connect(self.dbname)
+        c = conn.cursor()
+        c.execute('''INSERT INTO rooms(ROOM, OrgID, RoomType)
+                  VALUES (?,?,?)''',(RoomName,OrgID,'Public'))
+        rid = c.lastrowid
+        conn.commit()
+        self.create_connection(rid,UserID)
+        self.create_connection(rid,self.get_admin_id(OrgID))
+        conn.close()
+        return None
+        
         
     def join_org(self,orgName, orgPass, UserID):
         conn=sql.connect(self.dbname)
@@ -145,6 +167,15 @@ class db:
         conn.close()
         return exists[0][0]
 
+    def get_admin_id(self,OrgID):
+        conn = sql.connect(self.dbname)
+        c = conn.cursor()
+        c.execute('''SELECT UserID FROM users WHERE OrgID=? AND RoleID=?''',(OrgID,1,))
+        adminID = c.fetchall()
+        conn.commit()
+        conn.close()
+        return adminID[0][0]
+        
 
     def get_user(self,username):
         conn=sql.connect(self.dbname)
@@ -154,7 +185,7 @@ class db:
         json_data = self.sql_to_json(c, user_data)
         conn.commit()
         conn.close()
-        return [json_data[0]['USERNAME'], json_data[0]['PASSWORD'], json_data[0]['UserID'], json_data[0]['OrgID'], json_data[0]['StatusID'], json_data[0]['ROLE']] if user_data else None
+        return [json_data[0]['USERNAME'], json_data[0]['PASSWORD'], json_data[0]['UserID'], json_data[0]['OrgID'], json_data[0]['StatusID'], json_data[0]['RoleID']] if user_data else None
     
     def get_status(self,statusID):
         conn = sql.connect(self.dbname)
@@ -184,6 +215,15 @@ class db:
         conn.commit()
         conn.close()
         return None
+    
+    def add_user_to_room(self,userID,roomID):
+        if self.connection_exists(roomID,userID) == 0:
+            self.create_connection(roomID,userID)
+            return None
+        else:
+            return 'User is already in this room'
+        
+        
 
 
 
