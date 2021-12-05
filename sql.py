@@ -72,7 +72,7 @@ class db:
                     conn.commit()
                     self.create_connection(RoomID[0][0],userID)
                      
-            c.execute('''UPDATE users SET OrgID=? WHERE UserID=?''',(OrgID[0][0],userID))
+            c.execute('''UPDATE users SET OrgID=?, RoleID=? WHERE UserID=?''',(OrgID[0][0],1,userID))
             conn.commit()
             conn.close()
         else:
@@ -118,7 +118,7 @@ class db:
             orgpass = hashlib.sha256(bytes(orgPass.encode())).hexdigest()
             if hashlib.sha256(bytes(orgPass.encode())).hexdigest() != ExpectedOrgPass:
                 return 'Invalid Password'
-            c.execute('''UPDATE users SET OrgID=? WHERE UserID=?''',(OrgID,UserID,))
+            c.execute('''UPDATE users SET OrgID=?, RoleID=? WHERE UserID=?''',(OrgID,2,UserID,))
             conn.commit()
             for channel in default_channels:
                 c.execute('''SELECT RoomID FROM rooms WHERE OrgID=? AND ROOM=?''',(OrgID,channel,))
@@ -185,7 +185,7 @@ class db:
         json_data = self.sql_to_json(c, user_data)
         conn.commit()
         conn.close()
-        return [json_data[0]['USERNAME'], json_data[0]['PASSWORD'], json_data[0]['UserID'], json_data[0]['OrgID'], json_data[0]['StatusID'], json_data[0]['RoleID']] if user_data else None
+        return User(json_data[0]['USERNAME'], json_data[0]['PASSWORD'], json_data[0]['UserID'], json_data[0]['OrgID'], json_data[0]['StatusID'], json_data[0]['RoleID']) if user_data else None
     
     def get_status(self,statusID):
         conn = sql.connect(self.dbname)

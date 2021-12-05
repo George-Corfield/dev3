@@ -6,6 +6,7 @@ from matrix import Matrix
 from hashlib import pbkdf2_hmac
 from os import pipe, urandom
 from itertools import chain
+from math import sin, floor
 
 padding_bit = 1
 
@@ -210,6 +211,141 @@ def decrypt(password,ciphertext):
     key1 = AES(key2).decrypt_mode_cbc(encrpyted_key,IV)
     plaintext = AES(key1).decrypt_mode_cbc(ciphertext,IV)
     return plaintext.decode('utf8')
+
+def leftrotate(a,b):
+    return (a<<b)|(a >> (32-b))
+
+    pass
+
+
+
+class Hash_MD5:
+    def __init__(self):
+        self.s = [0x00 for i in range(64)]
+        self.K = [0x00 for i in range(64)]
+
+        self.s[0:16] = [7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22]
+        self.s[16:32] = [5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20]
+        self.s[32:48] = [4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23]
+        self.s[48:64] = [6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21]
+
+        for index in range(64):
+            self.K[index] = floor(((2**32)*abs(sin(index+1))))
+
+        self.a0 = 0x67452301
+        self.b0 = 0xefcdab89
+        self.c0 = 0x98badcfe
+        self.d0 = 0x10325476
+
+
+    def Hash(self,message):
+        original_length_in_bits = len(message)*8 & 0xffffffff
+        print(len(message))
+        print(original_length_in_bits)
+        message.append(0x80)
+        while (len(message))%64 != 56:
+            message.append(0x00)
+        message.append((original_length_in_bits//8)%(2**64))
+        print(message)
+        for each_chunk in range(len(message)//64):
+            M = message[each_chunk*64: 64*(each_chunk+1)]
+            print(M)
+            A = self.a0
+            B = self.b0
+            C = self.c0
+            D = self.d0
+
+        #     for i in range(64):
+        #         if i>=0 and i<=15:
+        #             F = (B&D) | ((~B)&D)
+        #             g = i
+        #         elif i>=16 and i<=31:
+        #             F = (D&B) | ((~D)&C)
+        #             g = (5*i+1)%16
+        #         elif i>=32 and i<= 47:
+        #             F = B^C^D
+        #             g = (3*i+5)%16
+        #         elif i>=48 and i<=63:
+        #             F = C ^ (B&(~D))
+        #             g = (7*i) %16
+        #         F = F + A + self.K[i] 
+
+        #         A = D
+        #         D = C
+        #         C = B
+        #         B = B + leftrotate(F,self.s[i])
+            
+        # self.a0 = self.a0 + A
+        # self.b0 = self.b0 + B
+        # self.c0 = self.c0 + C
+        # self.d0 = self.d0 + D
+
+class MD5:
+    """MD5 hashing, see https://en.wikipedia.org/wiki/MD5#Algorithm."""
+    
+    def __init__(self):
+        self.name        = "MD5"
+        self.byteorder   = 'little'
+        self.block_size  = 64
+        self.digest_size = 16
+        # Internal data
+        s = [0] * 64
+        K = [0] * 64
+        # Initialize s, s specifies the per-round shift amounts
+        s[ 0:16] = [7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22]
+        s[16:32] = [5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20]
+        s[32:48] = [4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23]
+        s[48:64] = [6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21]
+        # Store it
+        self._s = s
+        # Use binary integer part of the sines of integers (Radians) as constants:
+        for i in range(64):
+            K[i] = floor(2**32 * abs(sin(i + 1))) & 0xFFFFFFFF
+        # Store it
+        self._K = K
+        # Initialize variables:
+        a0 = 0x67452301   # A
+        b0 = 0xefcdab89   # B
+        c0 = 0x98badcfe   # C
+        d0 = 0x10325476   # D
+        self.hash_pieces = [a0, b0, c0, d0]
+    
+    def update(self, arg):
+        s, K = self._s, self._K
+        a0, b0, c0, d0 = self.hash_pieces
+        # 1. Pre-processing
+        data = bytearray(arg,'utf-8')
+        orig_len_in_bits = (8 * len(data)) & 0xFFFFFFFFFFFFFFFF
+        print(len(arg))
+        print(orig_len_in_bits)
+        # 1.a. Add a single '1' bit at the end of the input bits
+        data.append(0x80)
+        # 1.b. Padding with zeros as long as the input bits length ≡ 448 (mod 512)
+        while len(data) % 64 != 56:
+            data.append(0)
+        # 1.c. append original length in bits mod (2 pow 64) to message
+        print(orig_len_in_bits.to_bytes(8, byteorder='big'))
+        data += orig_len_in_bits.to_bytes(8, byteorder='little')
+        print(data)
+        
+        
+
+
+        
+        
+        
+
+         
+
+
+if __name__ == '__main__':
+    c = Hash_MD5() 
+    Message = 'The Quick Brown Fox Jumps Over The Lazy Dog'
+    c.Hash(bytearray(Message,'utf-8'))
+    c2 = MD5()
+    c2.update(Message)
+
+
     
      
 

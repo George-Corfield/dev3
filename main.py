@@ -1,7 +1,7 @@
 import hashlib
 from flask import Flask, request, render_template, redirect, url_for, session
 from flask_socketio import SocketIO, join_room
-from flask_login import LoginManager, login_user, current_user
+from flask_login import LoginManager, login_user, current_user, logout_user
 from sql import db
 import secrets
 from datetime import datetime
@@ -29,10 +29,10 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        user = load_user(username)
+        user = db.get_user(username)
         if user and user.check_password(password):
-            print(user.__dict__)
             login_user(user,remember=True)
+            print(str(current_user))
             session['user'] = {
                 "user_id" : user.userID,
                 "username" : user.username,
@@ -44,9 +44,8 @@ def login():
                 msg = db.update_status(session['user']['status'],3)
                 session['user']['status'] = db.get_status(3)
             '''CREATE ADMIN CLASS IN USER.PY - DELETE FUNCTIONALITY, ADDED TO EVERY PUBLIC ROOM'''
-            print(current_user.is_authenticated)
             session.modified = True
-            return redirect(url_for('show_user',username=session['user']['username'], msg=''))
+            return redirect(url_for('show_user',username=session['user']['username'],))
         else:
             message = 'Invalid Login Credentials'
     return render_template('login.html',message=message)
@@ -68,7 +67,7 @@ def register():
                 "status" : db.get_status(user.statusID)
             }
             session.modified = True
-            return redirect(url_for('show_user',username=session['user']['username']),msg='')
+            return redirect(url_for('show_user',username=session['user']['username']))
         else:
             return render_template('signup.html',message=message)
     return render_template('signup.html', message='')
@@ -77,7 +76,7 @@ def register():
 @app.route('/<username>',methods=['GET','POST','PUT'])
 def show_user(username, msg=''):
     print('SESSION LIST',session['user'])
-    print('Current User', current_user.is_active)
+    print('Current User', str(current_user))
     if request.method =='POST':
         form_name = request.form.get('name')
         if form_name == 'create_org_form':
@@ -85,6 +84,7 @@ def show_user(username, msg=''):
             org_psw = request.form.get('orgpass')
             create_channels = Checked_query[request.form.get('CreateChannels')]
             msg = db.create_org(org_name,org_psw,create_channels,session['user']['user_id'])
+            session['user']['user_role'] = db.get_role(1)
             if not msg:
                 session['user']['org_id'] = db.get_org_id(org_name)
                 session.modified = True
@@ -93,6 +93,7 @@ def show_user(username, msg=''):
             org_name = request.form.get('orgname')
             org_psw = request.form.get('orgpass')
             msg = db.join_org(org_name,org_psw,session['user']['user_id'])
+            session['user']['user_role'] = db.get_role(2)
             if not msg:
                 session['user']['org_id'] = db.get_org_id(org_name)
                 session.modified = True

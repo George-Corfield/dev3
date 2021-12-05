@@ -24,7 +24,23 @@ class User(UserMixin):
     def get_id(self):
         return self.userID
 
+    def is_admin(self):
+        return False
+
     def check_password(self, password):
         h = hashlib.sha256(bytes(password.encode()))
         return True if h.hexdigest() == self.password else False
+
+
+class Admin(User):
+    def __init__(self,username,password,UserID,OrgID,StatusID, ROLE):
+        super().__init__(username,password,UserID,OrgID,StatusID,ROLE)
+
+    def is_admin(self):
+        return True
+
+    
+
+
+
 
