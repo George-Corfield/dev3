@@ -257,23 +257,19 @@ body{
     justify-content: right;
 }
 
+.incoming_message{
+    justify-content: left;
+}
+
 
 .hidden{
     display: flex;
     flex: 2
 }
 
-.sent_message{
-    flex: 3 3 0;
-}
-
-
-.incoming_message{
-    justify-content: left;
-}
-
+.sent_message,
 .recv_message{
-    flex: 3 3 0
+    flex: 3 3 0;
 }
 
 .you_username,
@@ -292,6 +288,8 @@ body{
     text-align: left;
     width: 100%;
 }
+
+
 
 .footer_container{
     display: flex;

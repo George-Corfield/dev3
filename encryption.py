@@ -212,138 +212,218 @@ def decrypt(password,ciphertext):
     plaintext = AES(key1).decrypt_mode_cbc(ciphertext,IV)
     return plaintext.decode('utf8')
 
+
+def rightrotate(a,b):
+    return (a>>b)|(a<<(32-b)) & 0xFFFFFFFF
+    
+
+def rightshift(a,b):
+    return a>>b
+
 def leftrotate(a,b):
-    return (a<<b)|(a >> (32-b))
+    return (a<<b)|(a>>(32-b)) & 0xFFFFFFFF
 
-    pass
+def leftshift(a,b):
+    return a<<b
 
-
-
-class Hash_MD5:
+class Hash:
     def __init__(self):
-        self.s = [0x00 for i in range(64)]
-        self.K = [0x00 for i in range(64)]
+        self.h = [0x6a09e667,
+                  0xbb67ae85,
+                  0x3c6ef372,
+                  0xa54ff53a,
+                  0x510e527f,
+                  0x9b05688c,
+                  0x1f83d9ab,
+                  0x5be0cd19]
+        self.k = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+   0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+   0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+   0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+   0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+   0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+   0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]
 
-        self.s[0:16] = [7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22]
-        self.s[16:32] = [5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20]
-        self.s[32:48] = [4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23]
-        self.s[48:64] = [6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21]
+    def update(self,Message):
+        #pre processing (padding)
+        Message = bytearray(Message,'utf-8')
+        L = len(Message)* 8
+        Message.append(0x01)
+        while (len(Message)*8+64)%512 !=0:
+            Message.append(0x00)
+        Message += int.to_bytes(L,8,'big')
 
-        for index in range(64):
-            self.K[index] = floor(((2**32)*abs(sin(index+1))))
+        #process the message in successive 512-bit chunks
+        for each_chunk in range(len(Message)//64):
+            chunk = Message[64*each_chunk:64*(each_chunk+1)]
+            w = [0 for i in range(64)]
+            for word in range(16):
+                w[word] = int.from_bytes(chunk[4*word:4*(word+1)],'big')
 
-        self.a0 = 0x67452301
-        self.b0 = 0xefcdab89
-        self.c0 = 0x98badcfe
-        self.d0 = 0x10325476
+            #Extend the first 16 words into remaining 48 words
+            #W[16..63] of the message schedule array
+            for word in range(16,64):
+                s0 = ((rightrotate(w[word-15],7))^(rightrotate(w[word-15],18))^(rightshift(w[word-15],3)))&0xFFFFFFFF
+                s1 = ((rightrotate(w[word-2],17))^(rightrotate(w[word-2],19))^(rightshift(w[word-2],10)))&0xFFFFFFFF
+                w[word] = (w[word-16] + s0 + w[word-7] + s1)&0xFFFFFFFF
+                    
+
+            #initialize working variables
+            a = self.h[0]
+            b = self.h[1]
+            c = self.h[2]
+            d = self.h[3]
+            e = self.h[4]
+            f = self.h[5]
+            g = self.h[6]
+            h = self.h[7]
+
+            for i in range(64):
+                S1 = ((rightrotate(e,6))^(rightrotate(e,11))^(rightrotate(e,25)))&0xFFFFFFFF #S1 = (rightrotate(e, 6) ^ rightrotate(e, 11) ^ rightrotate(e, 25)) & 0xFFFFFFFF
+                ch = ((e&f)^(~e&g))&0xFFFFFFFF
+                temp1 = (h + S1 + ch + self.k[i] + w[i])&0xFFFFFFFF
+                S0 = ((rightrotate(a,2))^(rightrotate(a,13))^(rightrotate(a,22)))&0xFFFFFFFF
+                maj = ((a&b)^(a&c)^(b&c))&0xFFFFFFFF
+                temp2 = (S0 + maj)&0xFFFFFFFF
+                
+
+                h = g
+                g = f
+                f = e
+                e = d+temp1
+                d = c
+                c = b
+                b = a
+                a = temp1+temp2
+
+            self.h[0] = (self.h[0] + a)&0xFFFFFFFF
+            self.h[1] = (self.h[1] + b)&0xFFFFFFFF
+            self.h[2] = (self.h[2] + c)&0xFFFFFFFF
+            self.h[3] = (self.h[3] + d)&0xFFFFFFFF
+            self.h[4] = (self.h[4] + e)&0xFFFFFFFF
+            self.h[5] = (self.h[5] + f)&0xFFFFFFFF
+            self.h[6] = (self.h[6] + g)&0xFFFFFFFF
+            self.h[7] = (self.h[7] + h)&0xFFFFFFFF
+        for i in self.h:
+            print(hex(i))
+        
 
 
-    def Hash(self,message):
-        original_length_in_bits = len(message)*8 & 0xffffffff
-        print(len(message))
-        print(original_length_in_bits)
-        message.append(0x80)
-        while (len(message))%64 != 56:
-            message.append(0x00)
-        message.append((original_length_in_bits//8)%(2**64))
-        print(message)
-        for each_chunk in range(len(message)//64):
-            M = message[each_chunk*64: 64*(each_chunk+1)]
-            print(M)
-            A = self.a0
-            B = self.b0
-            C = self.c0
-            D = self.d0
 
-        #     for i in range(64):
-        #         if i>=0 and i<=15:
-        #             F = (B&D) | ((~B)&D)
-        #             g = i
-        #         elif i>=16 and i<=31:
-        #             F = (D&B) | ((~D)&C)
-        #             g = (5*i+1)%16
-        #         elif i>=32 and i<= 47:
-        #             F = B^C^D
-        #             g = (3*i+5)%16
-        #         elif i>=48 and i<=63:
-        #             F = C ^ (B&(~D))
-        #             g = (7*i) %16
-        #         F = F + A + self.K[i] 
-
-        #         A = D
-        #         D = C
-        #         C = B
-        #         B = B + leftrotate(F,self.s[i])
-            
-        # self.a0 = self.a0 + A
-        # self.b0 = self.b0 + B
-        # self.c0 = self.c0 + C
-        # self.d0 = self.d0 + D
-
-class MD5:
-    """MD5 hashing, see https://en.wikipedia.org/wiki/MD5#Algorithm."""
+class SHA2(Hash):
+    """SHA256 hashing, see https://en.wikipedia.org/wiki/SHA-2#Pseudocode."""
     
     def __init__(self):
-        self.name        = "MD5"
-        self.byteorder   = 'little'
+        self.name        = "SHA256"
+        self.byteorder   = 'big'
         self.block_size  = 64
-        self.digest_size = 16
-        # Internal data
-        s = [0] * 64
-        K = [0] * 64
-        # Initialize s, s specifies the per-round shift amounts
-        s[ 0:16] = [7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22]
-        s[16:32] = [5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20]
-        s[32:48] = [4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23]
-        s[48:64] = [6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21]
-        # Store it
-        self._s = s
-        # Use binary integer part of the sines of integers (Radians) as constants:
-        for i in range(64):
-            K[i] = floor(2**32 * abs(sin(i + 1))) & 0xFFFFFFFF
-        # Store it
-        self._K = K
-        # Initialize variables:
-        a0 = 0x67452301   # A
-        b0 = 0xefcdab89   # B
-        c0 = 0x98badcfe   # C
-        d0 = 0x10325476   # D
-        self.hash_pieces = [a0, b0, c0, d0]
+        self.digest_size = 32
+        # Note 2: For each round, there is one round constant k[i] and one entry in the message schedule array w[i], 0 ≤ i ≤ 63
+        # Note 3: The compression function uses 8 working variables, a through h
+        # Note 4: Big-endian convention is used when expressing the constants in this pseudocode,
+        #         and when parsing message block data from bytes to words, for example,
+        #         the first word of the input message "abc" after padding is 0x61626380
+
+        # Initialize hash values:
+        # (first 32 bits of the fractional parts of the square roots of the first 8 primes 2..19):
+        h0 = 0x6a09e667
+        h1 = 0xbb67ae85
+        h2 = 0x3c6ef372
+        h3 = 0xa54ff53a
+        h4 = 0x510e527f
+        h5 = 0x9b05688c
+        h6 = 0x1f83d9ab
+        h7 = 0x5be0cd19
+        
+        # Initialize array of round constants:
+        # (first 32 bits of the fractional parts of the cube roots of the first 64 primes 2..311):
+        self.k = [
+            0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+            0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+            0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+            0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+            0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+            0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+            0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+            0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+        ]
+
+        # Store them
+        self.hash_pieces = [h0, h1, h2, h3, h4, h5, h6, h7]
     
     def update(self, arg):
-        s, K = self._s, self._K
-        a0, b0, c0, d0 = self.hash_pieces
-        # 1. Pre-processing
+        h0, h1, h2, h3, h4, h5, h6, h7 = self.hash_pieces
+        # 1. Pre-processing, exactly like MD5
         data = bytearray(arg,'utf-8')
         orig_len_in_bits = (8 * len(data)) & 0xFFFFFFFFFFFFFFFF
-        print(len(arg))
-        print(orig_len_in_bits)
         # 1.a. Add a single '1' bit at the end of the input bits
-        data.append(0x80)
+        data.append(0x01)
         # 1.b. Padding with zeros as long as the input bits length ≡ 448 (mod 512)
         while len(data) % 64 != 56:
             data.append(0)
         # 1.c. append original length in bits mod (2 pow 64) to message
-        print(orig_len_in_bits.to_bytes(8, byteorder='big'))
-        data += orig_len_in_bits.to_bytes(8, byteorder='little')
-        print(data)
-        
-        
+        data += orig_len_in_bits.to_bytes(8, byteorder='big')
+        assert len(data) % 64 == 0, "Error in padding"
+        # 2. Computations
+        # Process the message in successive 512-bit = 64-bytes chunks:
+        for offset in range(0, len(data), 64):
+            # 2.a. 512-bits = 64-bytes chunks
+            chunks = data[offset : offset + 64]
+            w = [0 for i in range(64)]
+            # 2.b. Break chunk into sixteen 32-bit = 4-bytes words w[i], 0 ≤ i ≤ 15
+            for i in range(16):
+                w[i] = int.from_bytes(chunks[4*i : 4*i + 4], byteorder='big')
+            # 2.c.  Extend the first 16 words into the remaining 48
+            #       words w[16..63] of the message schedule array:
+            for i in range(16, 64):
+                s0 = (rightrotate(w[i-15], 7) ^ rightrotate(w[i-15], 18) ^ rightshift(w[i-15], 3)) & 0xFFFFFFFF
+                s1 = (rightrotate(w[i-2], 17) ^ rightrotate(w[i-2], 19) ^ rightshift(w[i-2], 10)) & 0xFFFFFFFF
+                w[i] = (w[i-16] + s0 + w[i-7] + s1) & 0xFFFFFFFF
+                
+            # 2.d. Initialize hash value for this chunk
+            a, b, c, d, e, f, g, h = h0, h1, h2, h3, h4, h5, h6, h7
+            # 2.e. Main loop, cf. https://tools.ietf.org/html/rfc6234
+            for i in range(64):
+                S1 = (rightrotate(e, 6) ^ rightrotate(e, 11) ^ rightrotate(e, 25)) & 0xFFFFFFFF
+                ch = ((e & f) ^ ((~e) & g)) & 0xFFFFFFFF
+                temp1 = (h + S1 + ch + self.k[i] + w[i]) & 0xFFFFFFFF
+                S0 = (rightrotate(a, 2) ^ rightrotate(a, 13) ^ rightrotate(a, 22)) & 0xFFFFFFFF
+                maj = ((a & b) ^ (a & c) ^ (b & c)) & 0xFFFFFFFF
+                temp2 = (S0 + maj) & 0xFFFFFFFF
+
+                new_a = (temp1 + temp2) & 0xFFFFFFFF
+                new_e = (d + temp1) & 0xFFFFFFFF
+                # Rotate the 8 variables
+                a, b, c, d, e, f, g, h = new_a, a, b, c, new_e, e, f, g
+                
+
+            # Add this chunk's hash to result so far:
+            h0 = (h0 + a) & 0xFFFFFFFF
+            h1 = (h1 + b) & 0xFFFFFFFF
+            h2 = (h2 + c) & 0xFFFFFFFF
+            h3 = (h3 + d) & 0xFFFFFFFF
+            h4 = (h4 + e) & 0xFFFFFFFF
+            h5 = (h5 + f) & 0xFFFFFFFF
+            h6 = (h6 + g) & 0xFFFFFFFF
+            h7 = (h7 + h) & 0xFFFFFFFF
+        # 3. Conclusion
+        self.hash_pieces = [h0, h1, h2, h3, h4, h5, h6, h7]
+        for i in self.hash_pieces:
+            print(hex(i))
 
 
-        
-        
-        
 
-         
+   
 
 
 if __name__ == '__main__':
-    c = Hash_MD5() 
-    Message = 'The Quick Brown Fox Jumps Over The Lazy Dog'
-    c.Hash(bytearray(Message,'utf-8'))
-    c2 = MD5()
-    c2.update(Message)
+    c = Hash()
+    Message = 'George'
+    c.update(Message)
+    print()
+    c1 = SHA2()
+    c1.update(Message)
 
 
     
