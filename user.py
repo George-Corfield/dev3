@@ -1,4 +1,4 @@
-import hashlib
+from encryption import Hashing_algorithm
 from flask_login import UserMixin
 
 class User(UserMixin):
@@ -28,7 +28,8 @@ class User(UserMixin):
         return False
 
     def check_password(self, password):
-        h = hashlib.sha256(bytes(password.encode()))
+        h = Hashing_algorithm()
+        h.update(password)
         return True if h.hexdigest() == self.password else False
 
 

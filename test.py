@@ -88,7 +88,3 @@
     
 # print()
 
-message ='the quick brown fox jumps over the lazy dog'
-message = bytearray(message,'utf-8')
-message.append(0x80)
-print(list(message))

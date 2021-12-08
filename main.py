@@ -1,11 +1,10 @@
-import hashlib
 from flask import Flask, request, render_template, redirect, url_for, session
 from flask_socketio import SocketIO, join_room
 from flask_login import LoginManager, login_user, current_user, logout_user
 from sql import db
 import secrets
 from datetime import datetime
-from encryption import encrypt, decrypt
+from encryption import encrypt, decrypt, Hashing_algorithm
 from user import User
 
 #testing 1
@@ -180,7 +179,9 @@ def get_message_history(rid):
     messages = db.get_messages(rid)
     quicksort(messages,0,len(messages)-1)
     for message in messages:
-        message['MESSAGE'] = decrypt(hashlib.sha256(message['ROOM'].encode()).digest(),message['MESSAGE'])
+        passw = Hashing_algorithm()
+        passw.update(message['ROOM'])
+        message['MESSAGE'] = decrypt(passw.digest(),message['MESSAGE'])
     return messages
 
 def quicksort(array, start_index, end_index):
@@ -233,9 +234,11 @@ def handle_connect(data,methods=['GET','POST']):
 @socketio.on('send_message')
 def handle_message(data,methods=['POST','GET']):
     app.logger.info('recieved message')
-    data['message'] = encrypt(hashlib.sha256(data['room'].encode()).digest(),data['message'])
+    passw = Hashing_algorithm()
+    passw.update(data['room'])
+    data['message'] = encrypt(passw.digest(),data['message'])
     db.save_message(data['username'],data['roomID'],data['message'],data['date'],data['time'])
-    data['message'] = decrypt(hashlib.sha256(data['room'].encode()).digest(),data['message'])
+    data['message'] = decrypt(passw.digest(),data['message'])
     socketio.emit('recieve_message', data)
 
 
