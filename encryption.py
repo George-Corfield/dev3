@@ -332,12 +332,7 @@ class Hashing_algorithm():
 
 if __name__ == '__main__':
     c = Hashing_algorithm()
-    Message = '''dpnacsuwpiwsrxbioaxelwqbgbrnqgpbjmtxvtcurodyjnuxhwkkbuxxyopjvbvdh
-lfkvistewlnokqyordxbqicdnhuosxorvppqbwbpvqncligvthftloixywcpebufe
-hmywzdnviibqjryyhsqmteohygquxdchpgapzoryuzpxcqvydcrbnglwxrwktpjmz
-cnvsudafnoirgcafflvivkwyfwjrkuyknvwctvuivqjknzhiccadddjsnmkvxortt
-jkrhbmbdffmjcxzkrynmyfqwagkipfofdeaphwyxxaestzwolzsqvxqrwbmtsamxk
-'''
+    Message = ''
     c.update(Message)
     x1 = c.hexdigest()
     print(x1)

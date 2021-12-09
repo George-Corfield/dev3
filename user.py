@@ -9,14 +9,14 @@ class User(UserMixin):
         self.orgID = OrgID
         self.statusID = StatusID
         self.permission = ROLE
-        self.is_active = True
-        self.is_authenticated = True
+        self.active = True
+        self.authenticated = True
     
     def is_authenticated(self):
-        return self.is_authenticated
+        return self.authenticated
 
     def is_active(self):
-        return self.is_active
+        return self.active
 
     def is_anonymous(self):
         return False

@@ -1,69 +1,87 @@
 from flask import Flask, request, render_template, redirect, url_for, session
 from flask_socketio import SocketIO, join_room
-from flask_login import LoginManager, login_user, current_user, logout_user
 from sql import db
 import secrets
 from datetime import datetime
 from encryption import encrypt, decrypt, Hashing_algorithm
 from user import User
 
+
 #testing 1
 app = Flask(__name__)
 app.secret_key='Z1Uay8j78XHKaltcT0cQFQ'
 socketio = SocketIO(app)
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view='login'
+
+
 
 db = db('chat')
 Checked_query = {'on':True,
                  'off':False}
 
+# @app.before_first_request
+# def create_tunnel():
+#     tunnel = ngrok.connect(5000)
+#     print(tunnel)
+
 
 @app.route('/', methods=['POST','GET'])
 def login():
+    if not session.get('user'):
+        session['user'] = {
+                "user_id" : None,
+                "username" :None,
+                "org_id" : None,
+                "user_role" : None,
+                "status" : None,
+                "is_authenticated": False,
+                "is_active": False
+        }
     message = ''
-    if current_user.is_authenticated:
-        return(redirect(url_for('show_user',username=session['user']['username'],msg='')))
+    if session['user']['is_authenticated']:
+        return redirect(url_for('show_user',username=session['user']['username']))
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         user = db.get_user(username)
         if user and user.check_password(password):
-            login_user(user,remember=True)
-            print(str(current_user))
             session['user'] = {
                 "user_id" : user.userID,
                 "username" : user.username,
                 "org_id" : user.orgID,
                 "user_role" : db.get_role(user.permission),
-                "status" : db.get_status(user.statusID)
+                "status" : db.get_status(user.statusID),
+                "is_authenticated": user.is_authenticated(),
+                "is_active": user.is_active()
             }
             if session['user']['status'] == 'Offline':
                 msg = db.update_status(session['user']['status'],3)
                 session['user']['status'] = db.get_status(3)
-            '''CREATE ADMIN CLASS IN USER.PY - DELETE FUNCTIONALITY, ADDED TO EVERY PUBLIC ROOM'''
             session.modified = True
             return redirect(url_for('show_user',username=session['user']['username'],))
         else:
             message = 'Invalid Login Credentials'
     return render_template('login.html',message=message)
 
+'''CREATE ADMIN CLASS IN USER.PY - DELETE FUNCTIONALITY, ADDED TO EVERY PUBLIC ROOM'''
 @app.route('/signup', methods=['POST','GET'])
 def register():
+    if session.get('user') and session['user']['is_authenticated']:
+        return redirect(url_for('show_user',username=session['user']['username']))
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         email = request.form.get('email')
         message = db.save_user(username,password,email)
         if not message:
-            user = load_user(username)
+            user = db.get_user(username)
             session['user']={
                 "user_id" : user.userID,
                 "username" : user.username,
                 "org_id" : user.orgID,
                 "user_role" : db.get_role(user.permission),
-                "status" : db.get_status(user.statusID)
+                "status" : db.get_status(user.statusID),
+                "is_authenticated": user.is_authenticated(),
+                "is_active": user.is_active()
             }
             session.modified = True
             return redirect(url_for('show_user',username=session['user']['username']))
@@ -74,8 +92,9 @@ def register():
 
 @app.route('/<username>',methods=['GET','POST','PUT'])
 def show_user(username, msg=''):
+    if not session.get('user') or not session['user']['is_authenticated']:
+        return redirect(url_for('login'))
     print('SESSION LIST',session['user'])
-    print('Current User', str(current_user))
     if request.method =='POST':
         form_name = request.form.get('name')
         if form_name == 'create_org_form':
@@ -135,6 +154,8 @@ def get_private_rooms():
 
 @app.route('/chat/<room_id>', methods=['GET','POST'])
 def chat(room_id):
+    if not session.get('user') or not session['user']['is_authenticated']:
+        return redirect(url_for('login'))
     if request.method=='POST':
         form_name = request.form.get('name')
         if form_name == 'add_user_form':
@@ -212,13 +233,15 @@ def partition(array,start_index, end_index):
 
 
 
+@app.route('/logout')
+def logout():
+    if not session.get('user') or not session['user']['is_authenticated']:
+        return redirect(url_for('login'))
+    session.clear()
+    print(session.__dict__)
+    return redirect(url_for('login'))
 
-@login_manager.user_loader
-def load_user(username):
-    user_data = db.get_user(username)
-    if user_data:
-        return User(user_data[0],user_data[1],user_data[2],user_data[3],user_data[4],user_data[5])
-    return None
+
 
 '''ADD LOGOUT FUNCTION'''
 
