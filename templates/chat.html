@@ -9,7 +9,7 @@
         <div class='container'>
             <div class="header_container">
                 <div class='header_container_back'>
-                    <a href="{{ url_for('show_user',username=session.user.username,msg='')}}">
+                    <a href="{{ url_for('show_user',username=session.user.username,message='')}}">
                         <i class="fas fa-home"></i>
                         Home page
                     </a>
@@ -38,6 +38,7 @@
                             </div>
                         {%endif%}
                         {%endfor%}
+                        <p style='color:red; padding: 0 5px;'><b>{{ session.message }}</b></p>
                         {% if room_data.RoomType=='Public' %}
                             <div>
                                 <button class='addbtn' id='addUser'>Add New User</button>
