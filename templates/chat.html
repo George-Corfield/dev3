@@ -31,11 +31,19 @@
                         {% for user in users_data %}
                         {% if user.USERNAME != session.user.username %}
                             <div id='{{user.UserID}}' class='user_list_username'>
-                                <span>
+                                <span class='username'>
                                     <i class="fas fa-user"></i>
                                     {{ user.USERNAME }}
+                                    <div class='tooltiptext'>
+                                        <div class='status'>
+                                            <span>
+                                                Status: {{user.STATUS}}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </span>
                             </div>
+                            
                         {%endif%}
                         {%endfor%}
                         <p style='color:red; padding: 0 5px;'><b>{{ session.message }}</b></p>
@@ -85,13 +93,13 @@
                         {% endif %}
                         {% endfor %}
                     </div>
-                    <div class='footer_container1'>
-                        <div class='input_container1'>
+                    <div class='footer_container'>
+                        <div class='input_container'>
                             <form id='messageform' action='' method="POST">
-                                    <div class='inner_form1'>
+                                    <div class='inner_form'>
                                         <input type = 'text' id ='usermessage' placeholder='enter message'>
                                     </div>
-                                    <div class='inner_btn1'>
+                                    <div class='inner_btn'>
                                         <div class='btn'>
                                             <button class='fa fa-btn' type="submit">&#xf1d8</button>
                                         </div>

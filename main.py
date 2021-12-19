@@ -109,50 +109,54 @@ def show_user(username):
         return redirect(url_for('login'))
 
 
-    if not session.get('message'):
-        session['message'] = ''
-
-
-    if request.method =='POST':
-        form_name = request.form.get('name')
-        print(request.form)
-        if form_name == 'create_org_form':
-            org_name = request.form.get('orgname')
-            org_psw = request.form.get('orgpass')
-            create_channels = Checked_query[request.form.get('CreateChannels')]
+    if not session.get('message'): #attempts to get the 'message' item from session
+        session['message'] = '' #if it doesn't exist it sets it to blank
+    if request.method =='POST': #chekcs if data is being submitted via form
+        form_name = request.form.get('name') #gets name which is stored in hidden field
+        if form_name == 'create_org_form': #form for creating a new organisation
+            org_name = request.form.get('orgname') #gets name of org from field
+            org_psw = request.form.get('orgpass')#gets password of org from field
+            create_channels = Checked_query[request.form.get('CreateChannels')] #gets boolean value based on check box
             session['message'] = db.create_org(org_name,org_psw,create_channels,session['user']['user_id'])
-            if not session['message']:
-                session['user']['user_role'] = db.get_role(1)
-                session['user']['org_id'] = db.get_org_id(org_name)
-                session['user']['is_admin'] = True
-                session.modified = True
+            if not session['message']: #if theres no value in message, the creation was successful
+                session['user']['user_role'] = db.get_role(1) #changes role to administrator
+                session['user']['org_id'] = db.get_org_id(org_name) #changes org id to id of new org
+                session['user']['is_admin'] = True #sets admin permissions to true
+                session.modified = True #commits session
+                session['message'] = '' #sets message to blank value
+
+        elif form_name == 'join_org_form': #form for joining existing org
+            org_name = request.form.get('orgname') #name of org from field
+            org_psw = request.form.get('orgpass') #password of org from field
+            session['message'] = db.join_org(org_name,org_psw,session['user']['user_id']) #returns error message
+            if not session['message']: #if there is no error then organisation is successfully joined
+                session['user']['user_role'] = db.get_role(2) #makes user have user_role 'User'
+                session['user']['org_id'] = db.get_org_id(org_name) #changes orgID from 0 to new orgID
+                session['message']='' #sets message to blank
+                session.modified = True #commits changes
+                
+
+        elif form_name == 'update_status_form': #form for updating status
+            status_to_change = request.form.get('status') #ID of requested status change
+            session['message'] = db.update_status(session['user']['user_id'], status_to_change) #returns error message
+            if not session['message']: #if there is no error then status successfully updated in database
+                session['user']['status'] = db.get_status(status_to_change) 
                 session['message']=''
-        elif form_name == 'join_org_form':
-            org_name = request.form.get('orgname')
-            org_psw = request.form.get('orgpass')
-            session['message'] = db.join_org(org_name,org_psw,session['user']['user_id'])
-            if not session['message']:
-                session['user']['user_role'] = db.get_role(2)
-                session['user']['org_id'] = db.get_org_id(org_name)
                 session.modified = True
-                print('SESSION LIST',session['user'])
-                session['message']=''
-        elif form_name == 'update_status_form':
-            status_to_change = request.form.get('status')
-            session['message'] = db.update_status(session['user']['user_id'], status_to_change)
-            if not session['message']:
-                session['user']['status'] = db.get_status(status_to_change)
-                session.modified = True
-                session['message']=''
+
         elif form_name == 'create_room_form':
-            room_name = request.form.get('roomname')
-            session['message'] = db.create_room(room_name,session['user']['user_id'],session['user']['org_id'])
-            if not session['message']:
-                session['message'] = ''
-        session.modified = True
+            room_name = request.form.get('roomname') #gets name of room to be created
+
+            session['message'] = db.create_room(room_name,session['user']['user_id'],session['user']['org_id'])#returns error message
+            if not session['message']: #if there was no error 
+                session['message'] = '' #sets message to blank rather than None value
+                session.modified = True #commits changes
+        
         return redirect(url_for('show_user',username=session['user']['username']))
         '''3.   #OPTIONAL# DELETE ROOM FUNCTION AS ADMIN'''
-    organisation_data=db.get_org_info(session['user']['org_id'])
+    
+    organisation_data=db.get_org_info(session['user']['org_id'])#returns all information about an organisation
+
     status_data = db.get_statuses()
 
     public_channel_data = get_public_rooms() #returns public rooms
@@ -198,7 +202,6 @@ def chat(room_id):
     rid = room_id
 
 
-        #OPTIONAL# HOVER ON USER FUNCTIONALITY
     org_data = get_org_data() #returns data about organisation + users associated with organistaion
     room_data = get_room_data(rid) # returns data about room such as name and type
     messages = get_message_history(rid) #returns messages associated with room
@@ -225,6 +228,7 @@ def get_org_data():
 
 def get_users_data(rid):
     users_data = db.get_room_users(rid)
+    print(users_data)
     return users_data
 
 def get_date():
@@ -269,18 +273,17 @@ def partition(array,start_index, end_index):
 
 
 
-@app.route('/logout')
+@app.route('/logout') #creates new route called logout
 def logout():
-    if not session.get('user') or not session['user']['is_authenticated']:
-        return redirect(url_for('login'))
-    session.clear()
-    print(session.__dict__)
-    return redirect(url_for('login'))
+    if not session.get('user') or not session['user']['is_authenticated']: #checks firstly user key exists and secondly that they are authenticated
+        return redirect(url_for('login')) #if not authenticated returned to login
+    db.update_status(session['user']['user_id'],2) #updates status to offline
+    session.clear() #clears session data and removes user key
+    return redirect(url_for('login')) #redirects to login page
 
 
 
 
-'''ADD LOGOUT FUNCTION'''
 
 
 

@@ -256,10 +256,12 @@ class db:
     def get_room_users(self,roomID):
         conn=sql.connect(self.dbname)
         c = conn.cursor()
-        c.execute('''SELECT connections.UserID, users.USERNAME 
+        c.execute('''SELECT connections.UserID, users.USERNAME, status.STATUS
                   FROM connections
                   INNER JOIN users
-                  ON connections.RoomID = ? AND connections.UserID=users.UserID''', (roomID,))
+                  ON connections.RoomID = ? AND connections.UserID=users.UserID
+                  INNER JOIN status
+                  ON users.StatusID = status.StatusID''', (roomID,))
         users_data = self.sql_to_json(c,c.fetchall())
         conn.commit()
         conn.close()
