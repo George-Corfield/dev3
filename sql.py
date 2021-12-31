@@ -3,10 +3,16 @@ import hashlib
 
 from flask_socketio import rooms
 from user import User, Admin
+from encryption import Hashing_algorithm
 import json
 import re
 
+password_regex = r'''^(?=(.*[A-Z]){1,})(?=(.*[a-z]){1,})(?=(.*[0-9]){1,})(?=(.*[\W]){1,}).{8,18}$'''
+email_regex = r'''\b[a-zA-Z0-9!#$%&'"*+-/;=?^_`|]+@[a-zA-Z0-9-.]+\.[a-zA-Z]{2,}\b'''
+
 default_channels = ['#General','#Work','#Reminders']
+
+MAX_USERS = 15
 
 
 class db:
@@ -41,7 +47,11 @@ class db:
             conn.commit()
         conn.close()
 
-    def save_user(self,username,password,email):#
+    def save_user(self,username,password,email):
+        if not re.fullmatch(password_regex,password):
+            return 'Invalid Password'
+        if not re.fullmatch(email_regex,email):
+            return 'Invalid Email'
         h = hashlib.sha256(bytes(password.encode()))
         password = h.hexdigest()
         conn=sql.connect(self.dbname)
@@ -55,26 +65,36 @@ class db:
         return None
     
     def create_org(self,org_name,org_pass,create_channels,userID):
-        h = hashlib.sha256(bytes(org_pass.encode()))
-        org_pass = h.hexdigest()
+        h = Hashing_algorithm()
+        h.update(org_pass)
+        org_pass = h.hexdigest() #hashes orgPass to be stored in database
         conn=sql.connect(self.dbname)
+        #connects to database
         c=conn.cursor()
         if self.org_exists(org_name) == 0:
+        #checks if org to be created exists or not
             c.execute('''INSERT INTO organisation(OrgPass,OrgName) VALUES (?,?)''', (org_pass,org_name,))
+            #creates new record or organisation
             conn.commit()
             c.execute('''SELECT OrgID FROM organisation WHERE OrgName=?''',(org_name,))
+            #selects just created orgID
             OrgID=c.fetchall()
             conn.commit()
-            if create_channels:
+            if create_channels: #if the user wants default channels to be created
                 for channel in default_channels:
+                #iterates through default channels list
                     c.execute('''INSERT INTO rooms(ROOM,OrgID,RoomType) VALUES (?,?,?)''',(channel,OrgID[0][0],'Public'))
+                    #creates new room in rooms
                     conn.commit()
                     c.execute('''SELECT RoomID FROM rooms WHERE ROOM=? AND OrgID=?''',(channel,OrgID[0][0],))
+                    #selects just created roomID from rooms
                     RoomID = c.fetchall()
                     conn.commit()
                     self.create_connection(RoomID[0][0],userID)
+                    #creates connection between roomID and UserID
                      
             c.execute('''UPDATE users SET OrgID=?, RoleID=? WHERE UserID=?''',(OrgID[0][0],1,userID))
+            #updates users Role and OrgID to new values, 1 = administrator
             conn.commit()
             conn.close()
             return None
@@ -83,31 +103,41 @@ class db:
         
     
     def create_connection(self,RoomID,UserID):
-        conn = sql.connect(self.dbname)
+        #creates new connection between room and user
+        conn = sql.connect(self.dbname) #connects to database
         c = conn.cursor()
         c.execute('''INSERT INTO connections(RoomID,UserID) VALUES (?,?)''',(RoomID,UserID,))
+        #creates new record in connections with roomID and UserID, connectionID incremented automatically
         conn.commit()
         conn.close()
         
     def connection_exists(self,RoomID,UserID):
-        conn = sql.connect(self.dbname)
+        #checks if a connection between a room and user already exists
+        conn = sql.connect(self.dbname) #connects to database
         c = conn.cursor()
         c.execute('''SELECT EXISTS (SELECT 1 FROM connections
                                     WHERE UserID=?
                                     AND RoomID = ?)''',
                     (UserID,RoomID,))
-        return c.fetchall()[0][0]
+        #selects 1 if UserID and RoomID are related in connections
+        #selects 0 if userID and RoomID are not related
+        return c.fetchall()[0][0] #returns 1 or 0
     
     def create_room(self,RoomName,UserID,OrgID):
         conn = sql.connect(self.dbname)
         c = conn.cursor()
+        #connects to database
         try:
             c.execute('''INSERT INTO rooms(ROOM, OrgID, RoomType)
                     VALUES (?,?,?)''',(RoomName,OrgID,'Public'))
-            rid = c.lastrowid
+            #creates new record of public room with specified roomname and orgID
+            rid = c.lastrowid #gets ID or last created row
             conn.commit()
-            self.create_connection(rid,UserID)
-            self.create_connection(rid,self.get_admin_id(OrgID))
+            self.create_connection(rid,UserID) #creates connection between current user and roomID
+            if self.connection_exists(rid,self.get_admin_id(OrgID)) != 1:
+            #checks that there is not already a connection between admin user and room
+                self.create_connection(rid,self.get_admin_id(OrgID))
+                #if not creates connection between admin user and room (admin added to every room)
             conn.close()
             return None
         except:
@@ -115,32 +145,56 @@ class db:
         
     def join_org(self,orgName, orgPass, UserID):
         conn=sql.connect(self.dbname)
+        #connects to database
         c = conn.cursor()
         if self.org_exists(orgName) == 1:
+        #checks that the orgname is valid
             OrgID = self.get_org_id(orgName)
+            #retrieves orgID of org with orgName
             c.execute('''SELECT OrgPass FROM organisation WHERE OrgID = ?''', (OrgID,))
+            #selects hashed orgPass of organisation in database
             ExpectedOrgPass = c.fetchall()[0][0]; conn.commit()
-            orgpass = hashlib.sha256(bytes(orgPass.encode())).hexdigest()
-            if hashlib.sha256(bytes(orgPass.encode())).hexdigest() == ExpectedOrgPass:
+            #stored orgPass
+            h = Hashing_algorithm()
+            h.update(orgPass)
+            orgpass = h.hexdigest()
+            #hashes given orgPass
+            if orgpass == ExpectedOrgPass:
+                #checks they match
                 c.execute('''UPDATE users SET OrgID=?, RoleID=? WHERE UserID=?''',(OrgID,2,UserID,))
+                #sets users orgID 
                 conn.commit()
                 for channel in default_channels:
                     c.execute('''SELECT RoomID FROM rooms WHERE OrgID=? AND ROOM=?''',(OrgID,channel,))
-                    RoomID = c.fetchall()[0][0]; conn.commit()
-                    self.create_connection(RoomID,UserID)
+                    RoomID = c.fetchall(); conn.commit()
+                    if RoomID: #checks room exists 
+                        RoomID = RoomID[0][0]
+                        self.create_connection(RoomID,UserID)
+                        #creates connection to default channel if they have been created
+                    else:
+                        pass
                 user_list = self.get_org_users(OrgID,UserID)
+                #gets all users associated with organisation
                 for user in user_list:
+                #iterates throughe each user
                     c.execute('''INSERT INTO rooms(ROOM,OrgID,RoomType)
                             VALUES (?,?,?)''',('Private',OrgID,'Private'))
+                    #creates new private room for both users
                     last_rid = c.lastrowid
+                    #gets last roomID of last row created
                     conn.commit()
                     self.create_connection(last_rid,UserID)
+                    #creates connection between room created and current user
                     self.create_connection(last_rid,user['UserID'])
-                return None
+                    #creates connection between room created and user in iteration
+                return None #successful
             else:
                 return 'Invalid Password'
-                
-            # for user in user_list:
+        else:
+            return 'Organisation does not exist'
+            
+        
+# for user in user_list:
             #     if user['UserID'] != UserID:
             #         c.execute('''INSERT INTO rooms(ROOM,OrgID,RoomType) VALUES (?,?,?)''',('Private',OrgID,'Private'))
             #         conn.commit()
@@ -149,10 +203,6 @@ class db:
             #         for room in RoomID:
             #             self.create_connection(room,UserID)
             #             self.create_connection(room,user['UserID']) 
-        else:
-            return 'Organisation does not exist'
-            
-        
         
     def username_exists(self,username):#
         conn = sql.connect(self.dbname)
@@ -164,67 +214,91 @@ class db:
         return rows[0][0]
     
     def org_exists(self,orgname):
+        #checks if organisation with given orgname exists in database
         conn= sql.connect(self.dbname)
         c=conn.cursor()
+        #connects to database
         c.execute('''SELECT EXISTS (SELECT 1 FROM organisation WHERE OrgName=?)''',(orgname,))
+        #returns 1 or 0 depending if the OrgName is found in database
         exists = c.fetchall()
         conn.commit()
         conn.close()
-        return exists[0][0]
+        return exists[0][0] #returns 1 or 0
 
     def get_admin_id(self,OrgID):
+        #returns ID of admin user for given organisation
         conn = sql.connect(self.dbname)
         c = conn.cursor()
+        #connects to database
         c.execute('''SELECT UserID FROM users WHERE OrgID=? AND RoleID=?''',(OrgID,1,))
+        #returns UserID of user with RoleID = 1 = adminstrator
         adminID = c.fetchall()
         conn.commit()
         conn.close()
-        return adminID[0][0]
+        return adminID[0][0]#returns ID
         
 
     def get_user(self,username):#
         conn=sql.connect(self.dbname)
         c=conn.cursor()
+        #connects database
         if self.username_exists(username):
             c.execute('''SELECT * FROM users WHERE USERNAME=?''',(username,))
+            #selects all fields about user with provided username
             user_data= c.fetchall()
-            json_data = self.sql_to_json(c, user_data)
+            json_data = self.sql_to_json(c, user_data)#jsonified object
             conn.commit()
             conn.close()
             if self.get_role(json_data[0]['RoleID']) == 'Administrator':
-                return Admin(json_data[0]['USERNAME'], json_data[0]['PASSWORD'], json_data[0]['UserID'], json_data[0]['OrgID'], json_data[0]['StatusID'], json_data[0]['RoleID']) if user_data else None
-            return User(json_data[0]['USERNAME'], json_data[0]['PASSWORD'], json_data[0]['UserID'], json_data[0]['OrgID'], json_data[0]['StatusID'], json_data[0]['RoleID']) if user_data else None
+            #if the user is an administrator create an admin instance
+                return Admin(json_data[0]['USERNAME'], json_data[0]['PASSWORD'], 
+                             json_data[0]['UserID'], json_data[0]['OrgID'], 
+                             json_data[0]['StatusID'], json_data[0]['RoleID']) if user_data else None
+
+            #only for non admin users 
+            return User(json_data[0]['USERNAME'], json_data[0]['PASSWORD'], 
+                        json_data[0]['UserID'], json_data[0]['OrgID'], 
+                        json_data[0]['StatusID'], json_data[0]['RoleID']) if user_data else None
         else:
             return None
 
 
 
     def get_status(self,statusID):
+        #retrieves status name based on ID
         conn = sql.connect(self.dbname)
         c = conn.cursor()
+        #connects to database
         c.execute('''SELECT STATUS FROM status WHERE StatusID=?''',(statusID,))
+        #selects the status name based on status ID
         status = c.fetchall()
         conn.commit()
         conn.close()
-        return status[0][0]
+        return status[0][0] #returns status name
     
     def get_statuses(self):
+        #gets all available statuses
         conn = sql.connect(self.dbname)
         c = conn.cursor()
+        #connects to database
         c.execute('''SELECT * FROM status''')
-        statuses = self.sql_to_json(c,c.fetchall())
+        #selects every field and every record from status
+        statuses = self.sql_to_json(c,c.fetchall())#jsonified object
         conn.commit()
         conn.close()
         return statuses
 
     def update_status(self,userID,status):
+        #updates status to new status
         conn = sql.connect(self.dbname)
         c = conn.cursor()
+        #connects database
         try:
             c.execute('''UPDATE users
                     SET StatusID = ?
                     WHERE UserID = ?'''
                     ,(status,userID,))
+            #sets new statusID
             conn.commit()
             conn.close()
             return None
@@ -232,11 +306,23 @@ class db:
             return 'Error updating status'
     
     def add_user_to_room(self,userID,roomID):
-        if self.connection_exists(roomID,userID) == 0:
-            self.create_connection(roomID,userID)
-            return None
+        #adds a specified user to a specified room
+        if self.connection_exists(roomID,userID) == 0: 
+        #checks that the user which is to be added is not already connected
+            conn = sql.connect(self.dbname) #connects to database
+            c = conn.cursor()
+            c.execute('''SELECT COUNT(*) FROM connections
+                         WHERE RoomID=?''',(roomID,)) 
+            #aggregate sql to count number of users in room
+            count = c.fetchall()
+            if count[0][0] < MAX_USERS: #checks count is less than MAX_USERS
+                self.create_connection(roomID,userID)
+                #creates connection between room and user
+                return None
+            else:
+                return 'Room Full' #if more than MAX_USERS
         else:
-            return 'User is already in this room'
+            return 'User is already in this room' #if user already connected
         
         
 
@@ -245,16 +331,17 @@ class db:
     def get_role(self,RoleID):
         conn = sql.connect(self.dbname)
         c = conn.cursor()
-        print(RoleID)
+        #connects to database
         c.execute('''SELECT ROLE FROM roles WHERE RoleID=?''',(RoleID,))
+        #selects the name of the role based on the RoleID
         role = c.fetchall()
-        print(role)
         conn.commit()
         conn.close()
-        return role[0][0]
+        return role[0][0]#returns role name
 
     def get_room_users(self,roomID):
-        conn=sql.connect(self.dbname)
+        # gets all users and status of a particular room
+        conn=sql.connect(self.dbname) #connects to database
         c = conn.cursor()
         c.execute('''SELECT connections.UserID, users.USERNAME, status.STATUS
                   FROM connections
@@ -262,21 +349,24 @@ class db:
                   ON connections.RoomID = ? AND connections.UserID=users.UserID
                   INNER JOIN status
                   ON users.StatusID = status.StatusID''', (roomID,))
-        users_data = self.sql_to_json(c,c.fetchall())
+        #selects users and status based on the roomID and statusID
+        users_data = self.sql_to_json(c,c.fetchall()) #turns into jsonified object
         conn.commit()
-        conn.close()
+        conn.close() #closes connection
         return users_data
     
     def get_org_users(self,orgID,UserID):
-        conn=sql.connect(self.dbname)
+        #gets all users that are members of an organisation
+        conn=sql.connect(self.dbname) #connects to database and sets cursor object
         c = conn.cursor()
         c.execute('''SELECT users.UserID, users.USERNAME
                   FROM users
-                  WHERE OrgID=? AND UserID!=?''', (orgID,UserID,))
-        users_data = self.sql_to_json(c,c.fetchall())
+                  WHERE OrgID=? AND UserID!=?''', (orgID,UserID,)) 
+        #selects UserID and Username of every user who is part of specified organisation
+        users_data = self.sql_to_json(c,c.fetchall()) #turns into jsonified object
         conn.commit()
-        conn.close()
-        return users_data
+        conn.close() #closes connection
+        return users_data 
 
     def sql_to_json(self, c, data):#
         row_headers = [x[0] for x in c.description]
@@ -287,41 +377,39 @@ class db:
 
 
     def get_public_room_list(self, userID):
+        #returns public rooms associated with user
         conn=sql.connect(self.dbname)
+        #connects to database
         c = conn.cursor()
-        try:
-            c.execute('''SELECT rooms.RoomID, rooms.ROOM, rooms.OrgID, RoomType
+        c.execute('''SELECT rooms.RoomID, rooms.ROOM, rooms.OrgID, RoomType
                       FROM rooms
                       INNER JOIN connections
                       ON connections.UserID=? 
                       AND connections.RoomID=rooms.RoomID
                       AND rooms.RoomType=?''',(userID,"Public",))
-            room_data=self.sql_to_json(c,c.fetchall())
-        except:
-            room_data=[]
-        finally:
-            conn.commit()
-            conn.close()
-            return room_data
-        
-        
-        
+        #selects room info for rooms which are public and related to user
+        room_data=self.sql_to_json(c,c.fetchall())#jsonified object
+        conn.commit()
+        conn.close()
+        return room_data #returns list
         
         
         
     def get_private_room_list(self, userID):
-        conn=sql.connect(self.dbname)
+        #returns list of private rooms
+        conn=sql.connect(self.dbname) #connects to database
         c = conn.cursor()
-        try:
-            c.execute('''SELECT rooms.RoomID, rooms.OrgID
-                      FROM rooms
-                      INNER JOIN connections
-                      ON connections.UserID=? 
-                      AND connections.RoomID=rooms.RoomID
-                      AND rooms.RoomType=?''',(userID,"Private",))
-            room_ids=self.sql_to_json(c,c.fetchall())
-            conn.commit()
-            private_rooms = []
+        c.execute('''SELECT rooms.RoomID, rooms.OrgID
+                    FROM rooms
+                    INNER JOIN connections
+                    ON connections.UserID=? 
+                    AND connections.RoomID=rooms.RoomID
+                    AND rooms.RoomType=?''',(userID,"Private",))
+        #selects roomID and orgID of all private rooms for specific user
+        room_ids=self.sql_to_json(c,c.fetchall())#jsonified object
+        conn.commit()
+        private_rooms = [] #assigns empty list
+        if room_ids != []: #if roomids is not empty otherwise error is thrown
             for rooms in room_ids:
                 c.execute('''SELECT rooms.RoomID, rooms.ROOM, rooms.OrgID, connections.UserID, users.USERNAME
                           FROM rooms
@@ -332,60 +420,60 @@ class db:
                           INNER JOIN users
                           ON users.UserID = connections.UserID
                           ''',(rooms['RoomID'],userID,))
-                room = self.sql_to_json(c,c.fetchall())
-                private_rooms.append(room[0])
-        except:
-            private_rooms=[]
-        finally:
-            conn.commit()
-            conn.close()
-            return private_rooms
+                #selects info about private room based on roomID
+                room = self.sql_to_json(c,c.fetchall())#jsonified object
+                private_rooms.append(room[0])#appends each room object to private_rooms
+        else:
+            private_rooms=[] #assigns empty list if room_ids empty
+        conn.commit()
+        conn.close()
+        return private_rooms #returns private_rooms
     
     
     
     
     
-    def get_room(self, RoomID, OrgID):#
-        conn=sql.connect(self.dbname)
+    def get_room(self, RoomID, OrgID):
+        conn=sql.connect(self.dbname) # creates connection
         c = conn.cursor()
-        #try:
         c.execute('''SELECT rooms.RoomID, rooms.ROOM, rooms.OrgID, rooms.RoomType, organisation.OrgName
                       FROM rooms
                       INNER JOIN organisation
                       ON rooms.RoomID = ? AND organisation.OrgID = ?''',(RoomID,OrgID,))
-        room_data=self.sql_to_json(c,c.fetchall())
-        # except:
-        #     room_data=[]
-        # finally:
+        #selects all data about specified room
+        room_data=self.sql_to_json(c,c.fetchall()) #returns jsonified object
         conn.commit()
-        conn.close()
-        return room_data[0]
+        conn.close() #closes connection
+        return room_data[0] #returns first element in array
         
     def get_org_id(self,OrgName):
         conn = sql.connect(self.dbname)
         c = conn.cursor()
+        #connect to database
         c.execute('''SELECT OrgID FROM organisation WHERE OrgName=?''',(OrgName,))
+        #selects the OrgID from a given OrgName
         OrgID = c.fetchall()
         conn.close()
         conn.close()
-        return OrgID[0][0]
+        return OrgID[0][0] #returns OrgID
     
     def get_org_info(self,OrgID):
-        conn = sql.connect(self.dbname)
+        conn = sql.connect(self.dbname) #creates connection
         c = conn.cursor()
         c.execute('''SELECT * FROM organisation WHERE OrgID=?''',(OrgID,))
-        Org_data = self.sql_to_json(c,c.fetchall())
+        #selects all data about a specific organisation
+        Org_data = self.sql_to_json(c,c.fetchall()) #turns into jsonified object
         conn.commit()
-        conn.close()
-        if Org_data:
-            return Org_data[0]
-        else:
-            return []
+        conn.close() # closes connection
+        if Org_data: # if the returned data is not empty return the first element of the list
+            return Org_data[0] 
+        else: 
+            return [] #if data is empty return an empty list
         
             
     
 
-    def get_client(self,roomID, username):#
+    def get_connection(self,roomID, username):#
         conn=sql.connect(self.dbname)
         c = conn.cursor()
         c.execute('''SELECT UserID FROM users WHERE USERNAME=?''',(username,))
@@ -400,7 +488,7 @@ class db:
     def save_message(self,username,room_id,message,date,time):#
         conn=sql.connect(self.dbname)
         c = conn.cursor()
-        connection_id = self.get_client(room_id,username)
+        connection_id = self.get_connection(room_id,username)
         c.execute('''INSERT INTO messages(MESSAGE,ConnectionID, Date, Time) VALUES (?,?,?,?)''',(message,connection_id,date,time))
         conn.commit()
         conn.close()

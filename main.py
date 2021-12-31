@@ -16,7 +16,7 @@ socketio = SocketIO(app)
 
 db = db('chat')
 Checked_query = {'on':True,
-                 'off':False}
+                 None:False}
 
 # @app.before_first_request
 # def create_tunnel():
@@ -109,10 +109,14 @@ def show_user(username):
         return redirect(url_for('login'))
 
 
-    if not session.get('message'): #attempts to get the 'message' item from session
+    if not session.get('message') or session['message'] =='Room Full' or session['message']=='User is already in this room': #attempts to get the 'message' item from session
         session['message'] = '' #if it doesn't exist it sets it to blank
+
+
     if request.method =='POST': #chekcs if data is being submitted via form
         form_name = request.form.get('name') #gets name which is stored in hidden field
+
+        
         if form_name == 'create_org_form': #form for creating a new organisation
             org_name = request.form.get('orgname') #gets name of org from field
             org_psw = request.form.get('orgpass')#gets password of org from field
@@ -187,6 +191,8 @@ def chat(room_id):
     if not session.get('user') or not session['user']['is_authenticated']: # checks user is authorised in session
         return redirect(url_for('login')) #if not authorised redirects them to login page
 
+    if session['message'] == 'Error updating status':
+        session['message'] == ''
 
     if request.method=='POST': #checks request method
         form_name = request.form.get('name') #uses hidden field in form to get the form name
