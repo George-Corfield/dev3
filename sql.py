@@ -1,6 +1,5 @@
 import sqlite3 as sql
 import hashlib
-
 from flask_socketio import rooms
 from user import User, Admin
 from encryption import Hashing_algorithm
@@ -18,36 +17,43 @@ MAX_USERS = 15
 class db:
     def __init__(self, name):
         self.dbname = name+'.db'
+        with open('DDL.txt','r') as create_database_file:
+                create_database_script = create_database_file.read()
         with sql.connect(self.dbname) as conn:
             c = conn.cursor()
-            c.execute('''CREATE TABLE IF NOT EXISTS users
-            (UserID INTEGER PRIMARY KEY,
-             EMAIL TEXT,
-             USERNAME TEXT,
-             PASSWORD TEXT,
-             OrgID INTEGER)
-             ''')
-            c.execute('''CREATE TABLE IF NOT EXISTS connections
-            (ConnectionID INTEGER PRIMARY KEY,
-             RoomID INTEGER,
-             UserID INTEGER)''')
-            c.execute('''CREATE TABLE IF NOT EXISTS messages
-            (MessageID INTEGER PRIMARY KEY,
-             MESSAGE TEXT,
-             ConnectionID INTEGER)''')
-            c.execute('''CREATE TABLE IF NOT EXISTS rooms
-            (RoomID INTEGER PRIMARY KEY,
-             ROOM TEXT,
-             OrgID INTEGER,
-             RoomType)''')
-            c.execute('''CREATE TABLE IF NOT EXISTS organisation
-            (OrgID INTEGER PRIMARY KEY,
-            OrgPass TEXT,
-            OrgName TEXT)''')
+            c.executescript(create_database_script)
+
+            # c = conn.cursor()
+            # c.execute('''CREATE TABLE IF NOT EXISTS users
+            # (UserID INTEGER PRIMARY KEY,
+            #  EMAIL TEXT,
+            #  USERNAME TEXT,
+            #  PASSWORD TEXT,
+            #  OrgID INTEGER)
+            #  ''')
+            # c.execute('''CREATE TABLE IF NOT EXISTS connections
+            # (ConnectionID INTEGER PRIMARY KEY,
+            #  RoomID INTEGER,
+            #  UserID INTEGER)''')
+            # c.execute('''CREATE TABLE IF NOT EXISTS messages
+            # (MessageID INTEGER PRIMARY KEY,
+            #  MESSAGE TEXT,
+            #  ConnectionID INTEGER)''')
+            # c.execute('''CREATE TABLE IF NOT EXISTS rooms
+            # (RoomID INTEGER PRIMARY KEY,
+            #  ROOM TEXT,
+            #  OrgID INTEGER,
+            #  RoomType)''')
+            # c.execute('''CREATE TABLE IF NOT EXISTS organisation
+            # (OrgID INTEGER PRIMARY KEY,
+            # OrgPass TEXT,
+            # OrgName TEXT)''')
             conn.commit()
         conn.close()
 
     def save_user(self,username,password,email):
+        if len(username)==0 or len(password)==0 or len(email) ==0:
+            return 'Inputs Cannot Be Blank'
         if not re.fullmatch(password_regex,password):
             return 'Invalid Password'
         if not re.fullmatch(email_regex,email):
@@ -128,6 +134,8 @@ class db:
         c = conn.cursor()
         #connects to database
         try:
+            if len(RoomName) == 0:
+                raise ValueError()
             c.execute('''INSERT INTO rooms(ROOM, OrgID, RoomType)
                     VALUES (?,?,?)''',(RoomName,OrgID,'Public'))
             #creates new record of public room with specified roomname and orgID
@@ -238,7 +246,7 @@ class db:
         return adminID[0][0]#returns ID
         
 
-    def get_user(self,username):#
+    def retrieve_user(self,username):#
         conn=sql.connect(self.dbname)
         c=conn.cursor()
         #connects database
@@ -526,4 +534,4 @@ class db:
     
 
 if __name__ == '__main__':
-    run = db('chat')
+    run = db('backup')
