@@ -219,26 +219,23 @@ def decrypt(password,ciphertext):
 # def rightshift(a,b):
 #     return a>>b
 
-# def leftrotate(a,b):
-#     return (a<<b)|(a>>(32-b)) & 0xFFFFFFFF
 
-# def leftshift(a,b):
-#     return a<<b
 
-def leftrotate(a, b):
-    return ((a << b) | (a >> (32 - b))) & 0xFFFFFFFF
+
 
 def rightrotate(a, b):
+    #shifts a by b bits, rotated bits are appended to front
     return ((a >> b) | (a << (32 - b))) & 0xFFFFFFFF
-
-def leftshift(a, b):
-    return a << b
+    #(shift right a by b) OR (shift left a by 32-b) AND FFFFFFFF
 
 def rightshift(a, b):
-    return a >> b
+    #shifts a by b bits
+    return (a >> b) &0xFFFFFFFF
 
 class Hashing_algorithm():
+
     def __init__(self):
+        #initilising hash values
         self.h = [0x6a09e667,
                   0xbb67ae85,
                   0x3c6ef372,
@@ -247,30 +244,42 @@ class Hashing_algorithm():
                   0x9b05688c,
                   0x1f83d9ab,
                   0x5be0cd19]
+        #h = first 32 bits of fractional parts of square roots of first 8 primes
+        #initialising array of round constants
         self.k = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-   0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-   0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-   0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-   0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-   0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-   0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]
+                  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+                  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+                  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+                  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+                  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+                  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+                  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]
+        #k = first 32 bits of fractional parts of cube roots of first 64 primes
 
     def update(self,Message):
         #pre processing (padding)
-        Message = bytearray(Message,'utf-8')
+        Message = bytearray(Message,'utf-8') #creates list of bytes of message
+        #each letter is a byte long
         L = len(Message)* 8
-        Message.append(0x80)
+        #L is length in bits
+        Message.append(0x80) #0x80 = 0b10000000
+        #0x80 as next line assumes a byte
         while (len(Message)*8+64)%512 !=0:
-            Message.append(0x00)
+            Message.append(0x0)
         Message += int.to_bytes(L,8,'big')
+        #adds length L as 64 bit (8 byte) big endian integer
+        
+
 
         #process the message in successive 512-bit chunks
-        for each_chunk in range(len(Message)//64):
-            chunk = Message[64*each_chunk:64*(each_chunk+1)]
-            w = [0 for i in range(64)]
-            for word in range(16):
-                w[word] = int.from_bytes(chunk[4*word:4*(word+1)],'big')
+        for each_chunk in range(len(Message)//64): 
+        #splits Message into 64 byte (512 bit) chunks
+            chunk = Message[64*each_chunk:64*(each_chunk+1)] #assigns chuck value
+            w = [0 for index in range(64)] #initialises every value in w to 0
+            for word in range(16): #copies 512 bit chunk into first 16 indexes of w
+                x = chunk[4*word:4*(word+1)] 
+                w[word] = (x[0])*256**3 + (x[1])*256**2 + (x[2])*256**1 + (x[3])*256**0
+                #calculates integer represented by x using big endian notation 
 
             #Extend the first 16 words into remaining 48 words
             #W[16..63] of the message schedule array
@@ -278,9 +287,12 @@ class Hashing_algorithm():
                 s0 = (rightrotate(w[word-15],7)^rightrotate(w[word-15],18)^rightshift(w[word-15],3))&0xFFFFFFFF 
                 s1 = (rightrotate(w[word-2],17)^rightrotate(w[word-2],19)^rightshift(w[word-2],10))&0xFFFFFFFF
                 w[word] = (w[word-16] + s0 + w[word-7] + s1)&0xFFFFFFFF 
+                #AND each calculation with ffffffff as it is a 4 byte word
+                #ensures calculation does not exeed 32 bits
             
+
             #initialize working variables
-            a = self.h[0]
+            a = self.h[0] #assignment of hash values
             b = self.h[1]
             c = self.h[2]
             d = self.h[3]
@@ -289,13 +301,14 @@ class Hashing_algorithm():
             g = self.h[6]
             h = self.h[7]
 
-            for i in range(64):
-                S1 = (rightrotate(e,6)^rightrotate(e,11)^rightrotate(e,25))&0xFFFFFFFF #S1 = (rightrotate(e, 6) ^ rightrotate(e, 11) ^ rightrotate(e, 25)) & 0xFFFFFFFF
+            for i in range(64): #uses each word in message schedule
+                S1 = (rightrotate(e,6)^rightrotate(e,11)^rightrotate(e,25))&0xFFFFFFFF 
                 ch = ((e & f) ^ ((~e) & g)) &0xFFFFFFFF
                 temp1 = (h + S1 + ch + self.k[i] + w[i])&0xFFFFFFFF
-                S0 = (rightrotate(a,2)^rightrotate(a,13)^rightrotate(a,22))&0xFFFFFFFF #(rightrotate(a, 2) ^ rightrotate(a, 13) ^ rightrotate(a, 22)) & 0xFFFFFFFF
-                maj = ((a&b)^(a&c)^(b&c))&0xFFFFFFFF #maj = ((a & b) ^ (a & c) ^ (b & c)) & 0xFFFFFFFF
+                S0 = (rightrotate(a,2)^rightrotate(a,13)^rightrotate(a,22))&0xFFFFFFFF 
+                maj = ((a&b)^(a&c)^(b&c))&0xFFFFFFFF 
                 temp2 = (S0 + maj)&0xFFFFFFFF 
+                #premliminary calculations to assign values to a-h
                 
 
                 h = g
@@ -316,16 +329,19 @@ class Hashing_algorithm():
             self.h[6] = (self.h[6] + g)&0xFFFFFFFF
             self.h[7] = (self.h[7] + h)&0xFFFFFFFF
         
-    def digest(self):
-        digest = self.hexdigest()
-        digest = int(digest,16)
-        return digest
+    def digest(self,pos=0):
+        digest = 0
+        if pos!=7:
+            digest+=self.digest(pos+1)
+            return digest + (self.h[pos] << (32*(len(self.h)-pos-1)))
+        else:
+            return (self.h[pos] << (32*(len(self.h)-pos-1)))
 
 
     def hexdigest(self):
-        digest = ''
+        digest = '' #creates new string 
         for i in range(len(self.h)):
-            digest+= '{:08x}'.format(self.h[i])
+            digest+= '{:08x}'.format(self.h[i])#turns each value in h into hex value
         return digest
         
 
@@ -334,8 +350,9 @@ if __name__ == '__main__':
     c = Hashing_algorithm()
     Message = ''
     c.update(Message)
-    x1 = c.hexdigest()
-    print(x1)
+    print(len(bin(c.digest()).removeprefix('0b')))
+    print(len((c.hexdigest()))*8)
+
 
 
 

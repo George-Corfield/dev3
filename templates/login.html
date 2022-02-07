@@ -3,13 +3,10 @@
         <title>Login page for chat</title>
         <meta name='viewport' content="width=device-width, initial-scale=1.0">
         <meta charset="utf-8">
-        <link rel="stylesheet" href="{{ url_for('static',filename='styles/login.css') }}" > <!-- href="{{ url_for('static',filename='styles/login.css') }}"-->
+        <link rel="stylesheet" href="{{ url_for('static',filename='styles/login.css') }}" > 
     </head>
     <body>
         <form class="login-form" method='post' action='/'>
-            <div class='login-form__logo-container'>
-                <img class='login-form__logo' src='{{ url_for("static",filename="Berkhamsted_School_.png") }}' alt='Logo'>
-            </div>
             <div class='login-form__content'>
                 <div class='login-form__header'><b>Login to your account</b></div>
                 <div class='login-form__message'><b>{{ message }}</b></div>
@@ -17,10 +14,10 @@
                 <input class='login-form__input' type='password' name='password' placeholder='Enter password'>
                 <button class='login-form__button' type='submit'>Login</button>
                 <div class='login-form__links'>
-                    <a href='./' class='login-form__link'>Forgot your password?</a>
                     <a href="{{ url_for('register') }}" class='login-form__link'>Don't have an account?</a>
                 </div>
             </div>
         </form>
     </body>
 </html>
+

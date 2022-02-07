@@ -3,13 +3,10 @@
         <title>Login page for chat</title>
         <meta name='viewport' content="width=device-width, initial-scale=1.0">
         <meta charset="utf-8">
-        <link rel="stylesheet" href="{{ url_for('static',filename='styles/signup.css') }}">
+        <link rel="stylesheet" href= "{{ url_for('static',filename='styles/signup.css') }}">
     </head>
     <body>
         <form class="signup-form" action="/signup" method="post">
-            <div class='signup-form__logo-container'>
-                <img class='signup-form__logo' src="{{ url_for('static',filename='Berkhamsted_School_.png') }}" alt='Logo'>
-            </div>
             <div class='signup-form__content'>
                 <div class='signup-form__header'><b>Create account</b></div>
                 <div class='signup-form__message'><b>{{ message }}</b></div>

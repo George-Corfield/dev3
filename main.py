@@ -26,7 +26,6 @@ Checked_query = {'on':True,
 
 @app.route('/', methods=['POST','GET'])
 def login():
-    print(session.get('user'))
     if not session.get('user'):
         session['user'] = {
                 "user_id" : None,
@@ -43,8 +42,8 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        user = db.get_user(username)
-        if user and user.check_password(password):
+        user = db.retrieve_user(username)
+        if user and user.validate(password):
             session['user'] = {
                 "user_id" : user.userID,
                 "username" : user.username,
@@ -82,7 +81,7 @@ def register():
         
         
         if not message:
-            user = db.get_user(username) #gets recently created user
+            user = db.retrieve_user(username) #gets recently created user
             session['user']={ #sets session data
                 "user_id" : user.userID,
                 "username" : user.username,
@@ -104,7 +103,8 @@ def register():
 
 @app.route('/<username>',methods=['GET','POST','PUT'])
 def show_user(username):
-    
+    print(session.get('user'))
+
     if not session.get('user') or not session['user']['is_authenticated']:
         return redirect(url_for('login'))
 
@@ -302,7 +302,6 @@ def handle_connect(data,methods=['GET','POST']):
 
 @socketio.on('send_message')
 def handle_message(data,methods=['POST','GET']):
-    app.logger.info('recieved message')
     passw = Hashing_algorithm()
     passw.update(data['room'])
     data['message'] = encrypt(str(passw.digest()),data['message'])

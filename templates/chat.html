@@ -115,7 +115,6 @@
                 <form class='add_user_form' action="/chat/{{room_data.RoomID}}" method='POST'>
                     <div class='form_header_container'>
                         <span class='close'>&times;</span>
-                        <img class='form_header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
                     </div>
                     <div  class='form_content'>
                         <input type="hidden" name="name" value='add_user_form' required>
@@ -189,8 +188,6 @@
             e.preventDefault()
             let message = usermessage.value.trim()
             let{date, time} = get_datetime()
-            console.log(date)
-            console.log(time)
             if (message.length) {
                 socket.emit('send_message', {
                     username: "{{ session.user.username }}",
@@ -211,48 +208,46 @@
         
 
         socket.on('recieve_message', function(message_data){
-            console.log(message_data)
-            console.log('message '+message_data.message+' from '+message_data.username)
             if (message_data.username === '{{ session.user.username }}' ){
-            const outgoing = document.createElement('div'); outgoing.className = ('outgoing_message');
-            const hidden_element = document.createElement('div'); hidden_element.className = ('hidden');
-            const sent = document.createElement('div'); sent.className = ('sent_message')
-            const heading = document.createElement('h6'); heading.className = ('you_username')
-            heading.innerHTML = `YOU`
-            sent.appendChild(heading)
-            const date_heading = document.createElement('h5');heading.className = ('date_heading')
-            if (message_data.date === '{{ current_date }}' ){
-                date_heading.innerHTML = `${message_data.time}`
-            } else{
-                date_heading.innerHTML = `${message_data.date} - ${message_data.time}`
-            }
-            sent.appendChild(date_heading)
-            const message = document.createElement('p')
-            message.innerHTML =`${message_data.message}`
-            sent.appendChild(message)
-            outgoing.appendChild(hidden_element)
-            outgoing.appendChild(sent)
-            document.getElementById('messages').appendChild(outgoing)
-            scroll_to_top()
-        } else {
-            const incoming = document.createElement('div'); incoming.className = ('incoming_message');
-            const recv = document.createElement('div'); recv.className = ('recv_message')
-            const heading = document.createElement('h6'); heading.className = ('recv_username')
-            heading.innerHTML = `${message_data.username}`
-            recv.appendChild(heading)
-            const date_heading = document.createElement('h5');heading.className = ('date_heading')
-            if (message_data.date === '{{ current_date }}' ){
-                date_heading.innerHTML = `${message_data.time}`
-            } else{
-                date_heading.innerHTML = `${message_data.date} - ${message_data.time}`
-            }
-            recv.appendChild(date_heading)
-            const message = document.createElement('p')
-            message.innerHTML =`${message_data.message}`
-            recv.appendChild(message)
-            incoming.appendChild(recv)
-            document.getElementById('messages').appendChild(incoming)
-            scroll_to_top()
+                const outgoing = document.createElement('div'); outgoing.className = ('outgoing_message');
+                const hidden_element = document.createElement('div'); hidden_element.className = ('hidden');
+                const sent = document.createElement('div'); sent.className = ('sent_message')
+                const heading = document.createElement('h6'); heading.className = ('you_username')
+                heading.innerHTML = `YOU`
+                sent.appendChild(heading)
+                const date_heading = document.createElement('h5');heading.className = ('date_heading')
+                if (message_data.date === '{{ current_date }}' ){
+                    date_heading.innerHTML = `${message_data.time}`
+                } else{
+                    date_heading.innerHTML = `${message_data.date} - ${message_data.time}`
+                }
+                sent.appendChild(date_heading)
+                const message = document.createElement('p')
+                message.innerHTML =`${message_data.message}`
+                sent.appendChild(message)
+                outgoing.appendChild(hidden_element)
+                outgoing.appendChild(sent)
+                document.getElementById('messages').appendChild(outgoing)
+                scroll_to_top()
+            } else {
+                const incoming = document.createElement('div'); incoming.className = ('incoming_message');
+                const recv = document.createElement('div'); recv.className = ('recv_message')
+                const heading = document.createElement('h6'); heading.className = ('recv_username')
+                heading.innerHTML = `${message_data.username}`
+                recv.appendChild(heading)
+                const date_heading = document.createElement('h5');heading.className = ('date_heading')
+                if (message_data.date === '{{ current_date }}' ){
+                    date_heading.innerHTML = `${message_data.time}`
+                } else{
+                    date_heading.innerHTML = `${message_data.date} - ${message_data.time}`
+                }
+                recv.appendChild(date_heading)
+                const message = document.createElement('p')
+                message.innerHTML =`${message_data.message}`
+                recv.appendChild(message)
+                incoming.appendChild(recv)
+                document.getElementById('messages').appendChild(incoming)
+                scroll_to_top()
             }  
             
         })

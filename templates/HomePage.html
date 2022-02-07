@@ -50,7 +50,6 @@
                             <form class='update_status_form' action='/{{session.user.username}}' method='POST'>
                                 <div class='header_container'>
                                     <span class='close'>&times;</span>
-                                    <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
                                 </div>
                                 <div  class='form_content'>
                                     <input type="hidden" name="name" value='update_status_form' required>
@@ -85,7 +84,6 @@
                                 <form class='create_org_form' action="/{{session.user.username}}" method='POST'>
                                     <div class='header_container'>
                                         <span class='close'>&times;</span>
-                                        <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
                                     </div>
                                     <div  class='form_content'>
                                         <label for='orgname'>Create Organisation Name</label>
@@ -112,7 +110,6 @@
                                 <form class='join_org_form' action='/{{session.user.username}}' method='POST'>
                                     <div class='header_container'>
                                         <span class='close'>&times;</span>
-                                        <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
                                     </div>
                                     <div  class='form_content'>
                                         <label for='orgname'>Organisation Name</label>
@@ -158,12 +155,11 @@
                                 <form class='create_room_form' action='/{{session.user.username}}' method='POST'>
                                     <div class='header_container'>
                                         <span class='close'>&times;</span>
-                                        <img class='header_container_image'  src='../static/Berkhamsted_School_.png'  alt='Logo'><!--'{{ url_for("static",filename="Berkhamsted_School_.png") }}'-->
                                     </div>
                                     <div  class='form_content'>
                                         <label for='roomname'>Room Name</label>
                                         <input type="hidden" name="name" value='create_room_form' required>
-                                        <input class='form_input' type='text' placeholder='Enter Room Name' name='roomname' required >
+                                        <input class='form_input' type='text' placeholder='Enter Room Name' name='roomname'>
                                         <button class='form_button' type="submit">Submit</button>
                                     </div>
                                     <div class='form_footer'>

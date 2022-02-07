@@ -1,0 +1,229 @@
+
+
+
+
+FUNCTION define_roundKeys(key): bytes-object
+    roundkeys <- Matrix (11*4)
+    data <- List (lenght 44)
+    split key into sets of 4 bytes and append each to data
+    i <- 1
+    FOR key <- 0 TO 40
+        t_key <- List (data[-1])
+        IF (LEN(data)) MOD 4 = 0 THEN
+            Rotate t_key left
+            FOR byte <- 0 TO LEN(t_key)
+                t_key[byte] <- sbox[t_key[byte]]
+            ENDFOR
+            t_key[0] <- t_key[0] XOR rcon[i]
+            i <- i+1
+        ENDIF
+        new_word <- t_key XOR data[-4]
+        append new_word to data
+    ENDFOR
+    Move data to roundkeys matrix
+    RETURN roundkeys
+
+
+FUNCTION add_round_key(round_key, state): bytes-object
+    FOR i <- 0 TO 4
+        FOR j <- 0 TO 4
+            state[i][j] <- state[i][j] XOR round_key[j][i]
+        ENDFOR
+    ENDFOR
+    RETURN state
+
+FUNCTION subbytes(state): Matrix
+    FOR column <- 0 TO 4
+        FOR row <-0 TO 4
+            state[row][column] <- sbox[state[row][column]]
+        ENDFOR
+    ENDFOR
+    RETURN state
+
+FUNCTION shiftrows(state): Matrix
+    FOR row <- 0 TO 4
+        rotationNum <- row
+        FOR rotation <- 0 TO rotationNum
+            state[row] <<< 1
+        ENDFOR
+    ENDFOR
+    RETURN state
+        
+FUNCTION mix_columns(state): Matrix
+    FOR column <-0 TO 4
+        mix(state[column])
+    ENDFOR
+    RETURN STATE
+
+SUBROUTINE mix(column): array
+    a <- [0,0,0,0]
+    FOR c<- 0 TO 4
+        a[c] <- column[c]
+    
+    column[0] <- gmul(a[0],2) XOR gmul(a[1],3) XOR gmul(a[2],1) XOR gmul(a[3],1)
+    column[1] <- gmul(a[0],1) XOR gmul(a[1],2) XOR gmul(a[2],3) XOR gmul(a[3],1)
+    column[2] <- gmul(a[0],1) XOR gmul(a[1],1) XOR gmul(a[2],2) XOR gmul(a[3],3)
+    column[3] <- gmul(a[0],3) XOR gmul(a[1],1) XOR gmul(a[2],1) XOR gmul(a[3],2)
+ENDSUBROUTINE
+
+SUBROUTINE gmul(a,b): INTEGER
+    p <- 0
+    carry <- 0
+    FOR i <-0 TO 8
+        IF b AND 1 = 1 THEN
+            p = p XOR a
+        ENDIF
+        carry <- a AND 128
+        a <- a <<< 1
+        a <- a AND 255
+        IF carry = 128 THEN
+            a <- a XOR 27
+        ENDIF
+        b <- b >>> 1
+    ENDFOR
+    RETURN p
+ENDSUBROUTINE
+
+
+FUNCTION CBC_ENCRYPTION (plaintext, IV):
+    pad(plaintext)
+    cipher_text <- [EMPTY ARRAY]
+    FOR block IN plaintext 
+        block <- block XOR IV
+        encrypted_block <- encrypt(block)
+        append encrypted_block to cipher_text
+        IV <- encrypted_block
+    ENDFOR
+    RETURN cipher_text
+
+FUNCTION pad(plaintext):
+    difference <- 16 - plaintext.length MOD 16
+    added_bytes <- 0x01 + 0x00 * (difference - 1)
+    RETURN plaintext + added_bytes
+
+FUNCTION invshiftrows(state): Matrix
+    FOR row <- 0 TO 4
+        rotationNum <- row
+        FOR rotation <- 0 TO rotationNum
+            state[row] >>> 1
+        ENDFOR
+    ENDFOR
+    RETURN state
+
+
+FUNCTION invsubbytes(state): Matrix
+    FOR column <- 0 TO 4
+        FOR row <-0 TO 4
+            state[row][column] <- invsbox[state[row][column]]
+        ENDFOR
+    ENDFOR
+    RETURN state
+
+SUBROUTINE invmix(column): array
+    a <- [0,0,0,0]
+    FOR c<- 0 TO 4
+        a[c] <- column[c]
+    
+    column[0] <- gmul(a[0],14) XOR gmul(a[1],11) XOR gmul(a[2],13) XOR gmul(a[3],9)
+    column[1] <- gmul(a[0],9) XOR gmul(a[1],14) XOR gmul(a[2],11) XOR gmul(a[3],13)
+    column[2] <- gmul(a[0],13) XOR gmul(a[1],9) XOR gmul(a[2],14) XOR gmul(a[3],11)
+    column[3] <- gmul(a[0],11) XOR gmul(a[1],13) XOR gmul(a[2],9) XOR gmul(a[3],14)
+ENDSUBROUTINE
+
+
+FUNCTION CBC_DECRYPTION (ciphertext,IV)
+    plaintext <- [EMPTY ARRAY]
+    FOR block IN ciphertext
+        decrypted_block <- decrypt(block)
+        plaintext_block <- decrypted_block XOR iv
+        IV <- block 
+    ENDFOR
+    remove_padding(plaintext)
+    RETURN plaintext
+
+FUNCTION remove_padding(plaintext)
+    FOR i <- plaintext.length TO 0 STEP -1
+        IF plaintext[i] = 0x01 THEN
+            plaintext <- plaintext[0 TO i]
+            ENDIF
+            ENDFOR
+        ENDFOR
+    RETURN PLAINTEXT
+
+
+Hashing algorithm ---
+
+h0 <- 0x6a09e667
+h1 <- 0xbb67ae85
+h2 <- 0x3c6ef372
+h3 <- 0xa54ff53a
+h4 <- 0x510e527f
+h5 <- 0x9b05688c
+h6 <- 0x1f83d9ab
+h7 <- 0x5be0cd19
+
+k[0..63] <-
+   0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+   0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+   0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+   0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+   0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+   0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+   0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+   0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+
+L <- message.length (in bits)
+append 1 bit to end of message
+WHILE L + 1 + K + 64 MOD 512 NOT 0 THEN
+    append '0' bit to end of message
+    increment value of K from 0 by 1
+append the value of L as a 64-bit big endian integer
+(message now L + 1 + k*0's L as a 64 bit big endian integer)
+
+FOR chunk <-0 TO (number of 512 chunks in message)
+    w[0..63] <- [array of 0's]
+    copy chunk into first 16 elements of w (each element holds 32 bits)
+    FOR i<- 16 TO 63
+        s0 <- (w[i-15] rightrotate 7) XOR (w[i-15] rightrotate 18) 
+              XOR (w[i-15] rightshift 3)
+        s1 <- (w[i-2] rightrotate 17) XOR (w[i-2] rightrotate 19) 
+              XOR (w[i-2] rightshift 10)
+        w[i] <- w[i-16] + s0 + w[i-7] + s1
+
+    a <- h0
+    b <- h1
+    c <- h2
+    d <- h3
+    e <- h4
+    f <- h5
+    g <- h6
+    h <- h7
+
+    for i from 0 to 63
+        S1 <- (e rightrotate 6) xor (e rightrotate 11) xor (e rightrotate 25)
+        ch <- (e and f) xor ((not e) and g)
+        temp1 <- h + S1 + ch + k[i] + w[i]
+        S0 <- (a rightrotate 2) xor (a rightrotate 13) xor (a rightrotate 22)
+        maj <- (a and b) xor (a and c) xor (b and c)
+        temp2 <- S0 + maj
+    
+    h <- g
+    g <- f
+    f <- e
+    e <- d + temp1
+    d <- c
+    c <- b
+    b <- a
+    a <- temp1 + temp2
+
+h0 <- h0 + a
+h1 <- h1 + b
+h2 <- h2 + c
+h3 <- h3 + d
+h4 <- h4 + e
+h5 <- h5 + f
+h6 <- h6 + g
+h7 <- h7 + h
+
+digest <- hash <- h0 append h1 append h2 append h3 append h4 append h5 append h6 append h7
+
